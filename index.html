@@ -248,7 +248,12 @@
             <a href="index.html" class="logo">
                 <img src="images/logo-gradient.png" alt="Data Jam" class="logo-img">
             </a>
-            <ul class="nav-menu">
+            <button class="mobile-menu-toggle" aria-label="Toggle menu" id="mobileMenuToggle">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
                 <li><a href="jambox.html">JamBox</a></li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="blog.html">Blog</a></li>
@@ -315,13 +320,14 @@
     <!-- Trusted By Section -->
     <section class="section trusted-by-section">
         <div class="container">
-            <p class="trusted-by-label animate-on-scroll">Trusted by leading OOH media owners</p>
+            <p class="trusted-by-label animate-on-scroll">Trusted by leading OOH media owners across the UK & US</p>
             <div class="trusted-logos animate-on-scroll">
-                <div class="logo-placeholder">Media Owner</div>
-                <div class="logo-placeholder">Agency</div>
-                <div class="logo-placeholder">DOOH Network</div>
-                <div class="logo-placeholder">Retail Group</div>
-                <div class="logo-placeholder">Transit Authority</div>
+                <img src="images/clients/sports-revolution-logo.jpeg" alt="Sports Revolution" class="client-logo">
+                <img src="images/clients/next-gen-media-logo.jpg" alt="Next-Gen Media" class="client-logo">
+                <img src="images/clients/eighteen24-logo.jpg" alt="eighteen24" class="client-logo">
+                <img src="images/clients/acms-logo.jpeg" alt="ACMS" class="client-logo">
+                <img src="images/clients/capitol-outdoor-logo.png" alt="Capitol Outdoor" class="client-logo">
+                <img src="images/clients/heritage-logo.png" alt="Heritage Outdoor" class="client-logo">
             </div>
         </div>
     </section>
@@ -439,6 +445,13 @@
             <div class="roi-calculator animate-on-scroll">
                 <div class="roi-inputs">
                     <div class="roi-input-group">
+                        <label for="roiCurrency">Your Region</label>
+                        <select id="roiCurrency" class="roi-select">
+                            <option value="GBP">UK (£ GBP)</option>
+                            <option value="USD">US ($ USD)</option>
+                        </select>
+                    </div>
+                    <div class="roi-input-group">
                         <label for="numSites">Number of OOH Sites</label>
                         <input type="range" id="numSites" min="1" max="500" value="50">
                         <span class="roi-value" id="numSitesValue">50</span>
@@ -446,7 +459,7 @@
                     <div class="roi-input-group">
                         <label for="avgRevenue">Avg Revenue per Site (Monthly)</label>
                         <input type="range" id="avgRevenue" min="500" max="10000" step="500" value="2000">
-                        <span class="roi-value">$<span id="avgRevenueValue">2,000</span></span>
+                        <span class="roi-value"><span id="currencySymbol">£</span><span id="avgRevenueValue">2,000</span></span>
                     </div>
                     <div class="roi-input-group">
                         <label for="undervalued">Sites Undervalued by Traditional Measurement</label>
@@ -457,15 +470,15 @@
                 <div class="roi-results">
                     <div class="roi-result-item">
                         <span class="roi-result-label">Current Annual Revenue</span>
-                        <span class="roi-result-value" id="currentRevenue">$1,200,000</span>
+                        <span class="roi-result-value" id="currentRevenue">£1,200,000</span>
                     </div>
                     <div class="roi-result-item highlight">
                         <span class="roi-result-label">Potential Additional Revenue</span>
-                        <span class="roi-result-value" id="additionalRevenue">$480,000</span>
+                        <span class="roi-result-value" id="additionalRevenue">£480,000</span>
                     </div>
                     <div class="roi-result-item">
                         <span class="roi-result-label">With Data Jam Measurement</span>
-                        <span class="roi-result-value" id="totalRevenue">$1,680,000</span>
+                        <span class="roi-result-value" id="totalRevenue">£1,680,000</span>
                     </div>
                     <a href="contact.html" class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;">Get Your Custom ROI Analysis</a>
                 </div>
@@ -806,7 +819,7 @@
         </div>
     </section>
 
-    <!-- Book a Demo - Calendly -->
+    <!-- Book a Demo -->
     <section class="section book-demo-section" id="book-demo">
         <div class="container">
             <div class="book-demo-grid">
@@ -820,10 +833,23 @@
                         <li>No obligation, just insights</li>
                     </ul>
                 </div>
-                <div class="book-demo-calendar animate-on-scroll">
-                    <!-- Calendly inline widget -->
-                    <div class="calendly-inline-widget" data-url="https://calendly.com/datajam/demo" style="min-width:320px;height:630px;"></div>
-                    <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
+                <div class="book-demo-form animate-on-scroll">
+                    <div class="demo-cta-card">
+                        <h3>Ready to see real data?</h3>
+                        <p>Get in touch and we'll schedule a personalized demo for your team.</p>
+                        <a href="contact.html" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">Request a Demo</a>
+                        <p class="demo-contact-alt">Or email us directly at <a href="mailto:hello@data-jam.com">hello@data-jam.com</a></p>
+                        <div class="demo-regions">
+                            <div class="demo-region">
+                                <strong>UK</strong>
+                                <span>+44 7827 813388</span>
+                            </div>
+                            <div class="demo-region">
+                                <strong>US</strong>
+                                <span>(747) 243-3513</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

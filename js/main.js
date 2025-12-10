@@ -11,6 +11,7 @@
 
     function init() {
         initSplashScreen();
+        initMobileMenu();
         initCustomCursor();
         initParticles();
         initScrollProgress();
@@ -23,6 +24,45 @@
         initParallaxElements();
         initLiveCounter();
         initROICalculator();
+    }
+
+    /**
+     * Mobile navigation menu
+     */
+    function initMobileMenu() {
+        const toggle = document.getElementById('mobileMenuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        if (!toggle || !navMenu) return;
+
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'nav-overlay';
+        document.body.appendChild(overlay);
+
+        toggle.addEventListener('click', () => {
+            toggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+        });
+
+        overlay.addEventListener('click', () => {
+            toggle.classList.remove('active');
+            navMenu.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+
+        // Close menu when clicking a link
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                toggle.classList.remove('active');
+                navMenu.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
     }
 
     /**
@@ -411,24 +451,28 @@
     }
 
     /**
-     * ROI Calculator interactivity
+     * ROI Calculator interactivity with UK/US currency support
      */
     function initROICalculator() {
         const numSites = document.getElementById('numSites');
         const avgRevenue = document.getElementById('avgRevenue');
         const undervalued = document.getElementById('undervalued');
+        const currencySelect = document.getElementById('roiCurrency');
 
         if (!numSites || !avgRevenue || !undervalued) return;
 
         const numSitesValue = document.getElementById('numSitesValue');
         const avgRevenueValue = document.getElementById('avgRevenueValue');
         const undervaluedValue = document.getElementById('undervaluedValue');
+        const currencySymbol = document.getElementById('currencySymbol');
         const currentRevenue = document.getElementById('currentRevenue');
         const additionalRevenue = document.getElementById('additionalRevenue');
         const totalRevenue = document.getElementById('totalRevenue');
 
+        let symbol = '£';
+
         function formatCurrency(num) {
-            return '$' + num.toLocaleString('en-US');
+            return symbol + num.toLocaleString('en-US');
         }
 
         function calculateROI() {
@@ -448,6 +492,12 @@
             totalRevenue.textContent = formatCurrency(Math.round(totalAnnual));
         }
 
+        function updateCurrency() {
+            symbol = currencySelect.value === 'USD' ? '$' : '£';
+            if (currencySymbol) currencySymbol.textContent = symbol;
+            calculateROI();
+        }
+
         // Initial calculation
         calculateROI();
 
@@ -455,6 +505,7 @@
         numSites.addEventListener('input', calculateROI);
         avgRevenue.addEventListener('input', calculateROI);
         undervalued.addEventListener('input', calculateROI);
+        if (currencySelect) currencySelect.addEventListener('change', updateCurrency);
     }
 
 })();
