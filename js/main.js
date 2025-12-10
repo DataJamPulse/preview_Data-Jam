@@ -31,13 +31,8 @@
         if (!splash) return;
 
         const body = document.body;
-        const hasSeenSplash = sessionStorage.getItem('datajam_splash_seen');
 
-        if (hasSeenSplash) {
-            splash.classList.add('instant-hide');
-            return;
-        }
-
+        // Always show splash on every visit
         body.classList.add('splash-active');
         splash.addEventListener('click', dismissSplash);
         setTimeout(dismissSplash, 5500);
@@ -46,8 +41,7 @@
             if (splash.classList.contains('fade-out')) return;
             splash.classList.add('fade-out');
             body.classList.remove('splash-active');
-            sessionStorage.setItem('datajam_splash_seen', 'true');
-            setTimeout(() => splash.remove(), 600);
+            setTimeout(() => splash.remove(), 1000);
         }
     }
 

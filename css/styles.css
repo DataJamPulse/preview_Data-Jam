@@ -198,10 +198,6 @@ body.splash-active {
     overflow: hidden !important;
 }
 
-/* Skip splash on return visits (optional - controlled by JS) */
-.splash-screen.instant-hide {
-    display: none !important;
-}
 
 /* Reset & Base */
 *, *::before, *::after {
@@ -2264,5 +2260,54 @@ a:hover {
 
     .case-study-stats {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Mobile splash screen optimizations */
+@media (max-width: 768px) {
+    .splash-title {
+        font-size: clamp(5rem, 25vw, 10rem);
+        text-shadow: 0 0 40px rgba(230, 47, 110, 0.4);
+    }
+
+    .splash-welcome {
+        font-size: clamp(0.9rem, 3vw, 1.4rem);
+        letter-spacing: 0.15em;
+    }
+
+    .splash-logo {
+        width: clamp(150px, 50vw, 220px);
+        margin-top: 2rem;
+    }
+
+    .splash-content {
+        padding: 0 1rem;
+    }
+
+    /* Hide particles on mobile for performance */
+    .particles-container {
+        display: none;
+    }
+
+    /* Hide custom cursor on touch devices */
+    .custom-cursor,
+    .custom-cursor-dot {
+        display: none !important;
+    }
+
+    /* Simplify marquee on mobile */
+    .marquee-track {
+        animation-duration: 20s;
+    }
+
+    .marquee-item {
+        font-size: 0.9rem;
+        padding: 0 1.5rem;
+    }
+
+    /* Statement section mobile */
+    .statement-text {
+        font-size: clamp(1.8rem, 6vw, 3rem);
+        padding: 0 1rem;
     }
 }
