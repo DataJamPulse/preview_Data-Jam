@@ -2636,6 +2636,23 @@ a:hover {
     font-size: 1.8rem;
 }
 
+.roi-note {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.roi-disclaimer {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-md);
+    text-align: center;
+    opacity: 0.7;
+}
+
 @media (max-width: 768px) {
     .roi-calculator {
         grid-template-columns: 1fr;
