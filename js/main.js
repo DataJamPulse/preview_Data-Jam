@@ -21,6 +21,8 @@
         initTiltCards();
         initSmoothReveal();
         initParallaxElements();
+        initLiveCounter();
+        initROICalculator();
     }
 
     /**
@@ -372,6 +374,87 @@
                 }
             });
         });
+    }
+
+    /**
+     * Live impressions counter - simulated with realistic growth
+     */
+    function initLiveCounter() {
+        const counter = document.getElementById('liveCounter');
+        if (!counter) return;
+
+        // Start with a base number that grows throughout the day
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const secondsSinceMidnight = Math.floor((now - startOfDay) / 1000);
+
+        // Base impressions rate: ~100 per second average, with variation
+        let baseCount = secondsSinceMidnight * 85;
+        let currentCount = baseCount;
+
+        function formatNumber(num) {
+            return num.toLocaleString('en-US');
+        }
+
+        function updateCounter() {
+            // Add random increment (60-140 per second to simulate real traffic)
+            const increment = Math.floor(Math.random() * 80) + 60;
+            currentCount += increment;
+            counter.textContent = formatNumber(currentCount);
+        }
+
+        // Initial display
+        counter.textContent = formatNumber(currentCount);
+
+        // Update every second
+        setInterval(updateCounter, 1000);
+    }
+
+    /**
+     * ROI Calculator interactivity
+     */
+    function initROICalculator() {
+        const numSites = document.getElementById('numSites');
+        const avgRevenue = document.getElementById('avgRevenue');
+        const undervalued = document.getElementById('undervalued');
+
+        if (!numSites || !avgRevenue || !undervalued) return;
+
+        const numSitesValue = document.getElementById('numSitesValue');
+        const avgRevenueValue = document.getElementById('avgRevenueValue');
+        const undervaluedValue = document.getElementById('undervaluedValue');
+        const currentRevenue = document.getElementById('currentRevenue');
+        const additionalRevenue = document.getElementById('additionalRevenue');
+        const totalRevenue = document.getElementById('totalRevenue');
+
+        function formatCurrency(num) {
+            return '$' + num.toLocaleString('en-US');
+        }
+
+        function calculateROI() {
+            const sites = parseInt(numSites.value);
+            const revenue = parseInt(avgRevenue.value);
+            const underval = parseInt(undervalued.value) / 100;
+
+            const annualCurrent = sites * revenue * 12;
+            const additionalAnnual = annualCurrent * underval;
+            const totalAnnual = annualCurrent + additionalAnnual;
+
+            numSitesValue.textContent = sites;
+            avgRevenueValue.textContent = revenue.toLocaleString('en-US');
+            undervaluedValue.textContent = undervalued.value;
+            currentRevenue.textContent = formatCurrency(annualCurrent);
+            additionalRevenue.textContent = formatCurrency(Math.round(additionalAnnual));
+            totalRevenue.textContent = formatCurrency(Math.round(totalAnnual));
+        }
+
+        // Initial calculation
+        calculateROI();
+
+        // Add event listeners
+        numSites.addEventListener('input', calculateROI);
+        avgRevenue.addEventListener('input', calculateROI);
+        undervalued.addEventListener('input', calculateROI);
     }
 
 })();

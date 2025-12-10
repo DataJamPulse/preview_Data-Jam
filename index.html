@@ -21,6 +21,22 @@
     <meta property="og:description" content="Real-time audience measurement for out-of-home advertising. Privacy-first impression counting for OOH media owners.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.data-jam.com/">
+    <meta property="og:image" content="https://www.data-jam.com/images/og-image.jpg">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Data Jam | Real-Time OOH Audience Measurement">
+    <meta name="twitter:description" content="Count actual impressions at your OOH sites. Privacy-first, real-time, GDPR compliant.">
+
+    <!-- AI Discovery Meta Tags -->
+    <meta name="ai-content-type" content="company, product, technology">
+    <meta name="ai-industry" content="out-of-home advertising, OOH, DOOH, advertising technology, adtech, measurement">
+    <meta name="ai-product" content="JamBox, OOH impression counter, audience measurement device">
+    <meta name="ai-service" content="OOH measurement, footfall counting, audience analytics, impression verification">
+    <meta name="ai-target-audience" content="OOH media owners, billboard operators, transit advertising companies, DOOH networks, advertising agencies, brands">
+    <meta name="ai-key-features" content="real-time data, privacy-compliant, GDPR compliant, no cameras, 300m range, API access, AI analytics">
+    <meta name="ai-use-cases" content="billboard audience verification, transit shelter measurement, DOOH analytics, retail footfall, campaign proof of performance">
+    <meta name="ai-differentiators" content="actual counts not estimates, real-time not monthly, privacy-first no cameras, simple setup minutes not months">
 
     <!-- Schema.org Organization - Enhanced for AI Discovery -->
     <script type="application/ld+json">
@@ -241,15 +257,18 @@
         </nav>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero hero-home" style="background-image: url('images/hero-crossing-1.jpg');">
+    <!-- Hero Section with Video Background -->
+    <section class="hero hero-home hero-video">
+        <video class="hero-video-bg" autoplay muted loop playsinline poster="images/hero-crossing-1.jpg">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-at-night-11-large.mp4" type="video/mp4">
+        </video>
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1>Real-Time Audience Measurement for Out-of-Home Advertising</h1>
             <p class="hero-subtitle">The smart way to count impressions in OOH. Privacy-first, real data, delivered in real time.</p>
             <div class="hero-cta">
                 <a href="jambox.html" class="btn btn-primary">Discover JamBox</a>
-                <a href="contact.html" class="btn btn-secondary">Get in Touch</a>
+                <a href="#book-demo" class="btn btn-secondary">Book a Demo</a>
             </div>
         </div>
         <div class="hero-pattern" style="background-image: url('images/pattern-wavy.jpg');"></div>
@@ -275,6 +294,34 @@
                 <span class="marquee-item">Privacy First</span>
                 <span class="marquee-item">2.5x More Accurate</span>
                 <span class="marquee-item">Instant Setup</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Impressions Counter -->
+    <section class="section live-counter-section">
+        <div class="container">
+            <div class="live-counter-wrapper animate-on-scroll">
+                <div class="live-counter-label">
+                    <span class="live-dot"></span>
+                    <span>Impressions Counted Today</span>
+                </div>
+                <div class="live-counter-number" id="liveCounter">0</div>
+                <p class="live-counter-sub">Real-time data from JamBox devices worldwide</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted By Section -->
+    <section class="section trusted-by-section">
+        <div class="container">
+            <p class="trusted-by-label animate-on-scroll">Trusted by leading OOH media owners</p>
+            <div class="trusted-logos animate-on-scroll">
+                <div class="logo-placeholder">Media Owner</div>
+                <div class="logo-placeholder">Agency</div>
+                <div class="logo-placeholder">DOOH Network</div>
+                <div class="logo-placeholder">Retail Group</div>
+                <div class="logo-placeholder">Transit Authority</div>
             </div>
         </div>
     </section>
@@ -332,6 +379,95 @@
                     <div class="jambox-badge">
                         <span class="badge-text">Real Data<br>Real Time</span>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works - Animated Steps -->
+    <section class="section how-it-works-section">
+        <div class="container">
+            <h2 class="animate-on-scroll">How It Works</h2>
+            <p class="section-intro animate-on-scroll">From installation to insights in minutes, not months.</p>
+
+            <div class="steps-container stagger-children">
+                <div class="step animate-on-scroll">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </div>
+                    <h3>Install JamBox</h3>
+                    <p>Connect to power and WiFi. That's it. No complex setup, no infrastructure changes required.</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step animate-on-scroll">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                    </div>
+                    <h3>Capture Data</h3>
+                    <p>JamBox detects anonymized device signals within 300m, counting real audience presence in real time.</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step animate-on-scroll">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    </div>
+                    <h3>View Insights</h3>
+                    <p>Access your dashboard instantly. See hourly breakdowns, trends, and AI-powered predictions.</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step animate-on-scroll">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <h3>Prove Value</h3>
+                    <p>Show advertisers verified impression data. Price inventory accurately. Win more business.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI Calculator -->
+    <section class="section roi-calculator-section" id="roi-calculator">
+        <div class="container">
+            <h2 class="animate-on-scroll">Calculate Your ROI</h2>
+            <p class="section-intro animate-on-scroll">See how much value accurate measurement could add to your OOH network.</p>
+
+            <div class="roi-calculator animate-on-scroll">
+                <div class="roi-inputs">
+                    <div class="roi-input-group">
+                        <label for="numSites">Number of OOH Sites</label>
+                        <input type="range" id="numSites" min="1" max="500" value="50">
+                        <span class="roi-value" id="numSitesValue">50</span>
+                    </div>
+                    <div class="roi-input-group">
+                        <label for="avgRevenue">Avg Revenue per Site (Monthly)</label>
+                        <input type="range" id="avgRevenue" min="500" max="10000" step="500" value="2000">
+                        <span class="roi-value">$<span id="avgRevenueValue">2,000</span></span>
+                    </div>
+                    <div class="roi-input-group">
+                        <label for="undervalued">Sites Undervalued by Traditional Measurement</label>
+                        <input type="range" id="undervalued" min="10" max="100" value="40">
+                        <span class="roi-value"><span id="undervaluedValue">40</span>%</span>
+                    </div>
+                </div>
+                <div class="roi-results">
+                    <div class="roi-result-item">
+                        <span class="roi-result-label">Current Annual Revenue</span>
+                        <span class="roi-result-value" id="currentRevenue">$1,200,000</span>
+                    </div>
+                    <div class="roi-result-item highlight">
+                        <span class="roi-result-label">Potential Additional Revenue</span>
+                        <span class="roi-result-value" id="additionalRevenue">$480,000</span>
+                    </div>
+                    <div class="roi-result-item">
+                        <span class="roi-result-label">With Data Jam Measurement</span>
+                        <span class="roi-result-value" id="totalRevenue">$1,680,000</span>
+                    </div>
+                    <a href="contact.html" class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;">Get Your Custom ROI Analysis</a>
                 </div>
             </div>
         </div>
@@ -613,12 +749,95 @@
         </div>
     </section>
 
+    <!-- Comparison Chart -->
+    <section class="section comparison-section">
+        <div class="container">
+            <h2 class="animate-on-scroll">How Data Jam Compares</h2>
+            <p class="section-intro animate-on-scroll">See why leading OOH media owners are switching to real-time measurement.</p>
+
+            <div class="comparison-table-wrapper animate-on-scroll">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Traditional Measurement</th>
+                            <th class="highlight-col">Data Jam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Data Type</td>
+                            <td>Modeled estimates</td>
+                            <td class="highlight-col">Actual counts</td>
+                        </tr>
+                        <tr>
+                            <td>Timing</td>
+                            <td>Monthly/quarterly reports</td>
+                            <td class="highlight-col">Real-time</td>
+                        </tr>
+                        <tr>
+                            <td>Privacy</td>
+                            <td>Often camera-based</td>
+                            <td class="highlight-col">No cameras, GDPR compliant</td>
+                        </tr>
+                        <tr>
+                            <td>Setup Time</td>
+                            <td>Weeks to months</td>
+                            <td class="highlight-col">Minutes</td>
+                        </tr>
+                        <tr>
+                            <td>Location Specificity</td>
+                            <td>Zone-based averages</td>
+                            <td class="highlight-col">Site-specific data</td>
+                        </tr>
+                        <tr>
+                            <td>Predictive Analytics</td>
+                            <td>Limited</td>
+                            <td class="highlight-col">AI-powered forecasting</td>
+                        </tr>
+                        <tr>
+                            <td>API Access</td>
+                            <td>Rare</td>
+                            <td class="highlight-col">Full API included</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Book a Demo - Calendly -->
+    <section class="section book-demo-section" id="book-demo">
+        <div class="container">
+            <div class="book-demo-grid">
+                <div class="book-demo-content animate-on-scroll">
+                    <h2>Book a Demo</h2>
+                    <p class="lead">See JamBox in action. Our team will show you how real-time audience measurement can transform your OOH business.</p>
+                    <ul class="demo-benefits">
+                        <li>Live dashboard walkthrough</li>
+                        <li>Custom ROI analysis for your network</li>
+                        <li>Q&A with our measurement experts</li>
+                        <li>No obligation, just insights</li>
+                    </ul>
+                </div>
+                <div class="book-demo-calendar animate-on-scroll">
+                    <!-- Calendly inline widget -->
+                    <div class="calendly-inline-widget" data-url="https://calendly.com/datajam/demo" style="min-width:320px;height:630px;"></div>
+                    <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="section cta-section animate-on-scroll animate-scale">
         <div class="container">
             <h2>Ready to Measure Your OOH Audience?</h2>
             <p>Join the growing number of OOH media owners using Data Jam for real-time audience measurement and proof of performance.</p>
-            <a href="contact.html" class="btn btn-primary">Get Started</a>
+            <div class="cta-buttons">
+                <a href="contact.html" class="btn btn-primary">Get Started</a>
+                <a href="#case-study" class="btn btn-secondary">Download Case Study</a>
+            </div>
         </div>
     </section>
 
