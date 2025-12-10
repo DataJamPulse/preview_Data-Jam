@@ -24,6 +24,7 @@
         initParallaxElements();
         initLiveCounter();
         initROICalculator();
+        initCookieConsent();
     }
 
     /**
@@ -506,6 +507,42 @@
         avgRevenue.addEventListener('input', calculateROI);
         undervalued.addEventListener('input', calculateROI);
         if (currencySelect) currencySelect.addEventListener('change', updateCurrency);
+    }
+
+    /**
+     * Cookie Consent Banner
+     */
+    function initCookieConsent() {
+        const banner = document.getElementById('cookieBanner');
+        const acceptBtn = document.getElementById('cookieAccept');
+        const declineBtn = document.getElementById('cookieDecline');
+
+        if (!banner) return;
+
+        // Check if user has already made a choice
+        const consent = localStorage.getItem('cookieConsent');
+        if (consent === null) {
+            // Show banner after a short delay
+            setTimeout(() => {
+                banner.classList.add('visible');
+            }, 1500);
+        }
+
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', () => {
+                localStorage.setItem('cookieConsent', 'accepted');
+                banner.classList.remove('visible');
+                // Here you would initialize analytics if using them
+                // initAnalytics();
+            });
+        }
+
+        if (declineBtn) {
+            declineBtn.addEventListener('click', () => {
+                localStorage.setItem('cookieConsent', 'declined');
+                banner.classList.remove('visible');
+            });
+        }
     }
 
 })();
