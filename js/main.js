@@ -40,7 +40,7 @@
 
         body.classList.add('splash-active');
         splash.addEventListener('click', dismissSplash);
-        setTimeout(dismissSplash, 3000);
+        setTimeout(dismissSplash, 5500);
 
         function dismissSplash() {
             if (splash.classList.contains('fade-out')) return;
