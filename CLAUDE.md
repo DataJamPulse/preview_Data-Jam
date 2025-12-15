@@ -64,22 +64,27 @@ Premium marketing website for Data Jam, an **AI-powered movement intelligence pl
 
 ## Tech Stack
 - Static HTML/CSS/JS
-- Netlify hosting with Netlify Forms
+- Netlify hosting with Netlify Functions
+- Supabase for lead capture (shared project with PULSE portal)
+- Resend for transactional emails
 - GitHub CI/CD auto-deployment
 - No build step required
 
 ## Key Files
 ```
-/index.html          - Homepage (main marketing page)
-/about.html          - About page
-/jambox.html         - Product page
-/blog.html           - Blog listing
-/contact.html        - Contact form (Netlify Forms)
-/contact-success.html - Form submission success page
-/css/styles.css      - All styles (dark theme, premium feel)
-/js/main.js          - Interactions (splash, cursor, animations, ROI calc)
-/images/clients/     - Client logos
-/images/pulse-jammed.png - Neon turntable visual for PULSE
+/index.html              - Homepage (main marketing page)
+/about.html              - About page
+/jambox.html             - Product page
+/blog.html               - Blog listing
+/contact.html            - Contact form (Supabase + email notification)
+/contact-success.html    - Form submission success page
+/installation.html       - Installer portal placeholder ("A to the Con...")
+/privacy.html            - Privacy policy
+/css/styles.css          - All styles (dark theme, premium feel)
+/js/main.js              - Interactions (splash, cursor, animations, ROI calc)
+/netlify.toml            - Security headers (CSP), redirects, caching
+/netlify/functions/notify-lead.js - Email notification on new leads
+/images/clients/         - Client logos
 ```
 
 ## Brand Colors
@@ -95,7 +100,7 @@ Premium marketing website for Data Jam, an **AI-powered movement intelligence pl
 - Body: Poppins Light
 
 ## Premium Features Implemented
-- Splash screen (shows every visit)
+- Splash screen (shows once per session, skippable)
 - Custom cursor with hover effects (desktop only)
 - Floating particles background
 - Scroll progress indicator
@@ -105,15 +110,68 @@ Premium marketing website for Data Jam, an **AI-powered movement intelligence pl
 - Live impressions counter
 - ROI Calculator with UK/US currency toggle
 - Mobile hamburger menu
-- Video hero background (needs updating - currently shows billboards, should show pedestrian traffic)
+- Video hero background
 - Client logo marquee
+- Cookie consent banner
 
 ## AI Search Optimization
 Site includes Schema.org structured data and custom meta tags for AI discoverability:
 - `ai-content-type`, `ai-industry`, `ai-technology`
 - Targets queries around: footfall counting, pedestrian traffic measurement, OOH audience data, movement analytics
 
+## Lead Capture System (Dec 2024)
+
+### Flow
+```
+Contact Form → Supabase (website_leads) → Email Notification → HubSpot (via legacy sync)
+```
+
+### Supabase
+- **Project:** DataJamPulse (shared with PULSE portal)
+- **URL:** https://ysavdqiiilslrigtpacu.supabase.co
+- **Table:** `website_leads`
+- **RLS Policy:** Anonymous INSERT only (website can add, not read)
+- Anon key is in contact.html (safe - RLS restricts access)
+
+### Email Notifications
+- **Service:** Resend (resend.com)
+- **Domain:** data-jam.com (verified)
+- **Recipients:** arran@data-jam.com, rhea@data-jam.com
+- **Function:** `/netlify/functions/notify-lead.js`
+
+### HubSpot Integration
+- Connected via legacy app that syncs from Supabase
+- Leads go to "Website Leads" in HubSpot (unqualified)
+- Qualified manually before converting to opportunity
+
+## Installer Portal
+
+- **URL:** /installation (placeholder page currently)
+- **Message:** "A to the Con, waiting on you bro... just say when"
+- **Future:** Alex's installer portal will be deployed here
+- **Backend:** Will connect to Supabase for install data (photos, WiFi creds, etc.)
+- **Auth:** Will use Supabase Auth when deployed
+- **Note:** Page has `noindex` meta tag - not for public/SEO
+
+## Environment Variables (Netlify)
+```
+RESEND_API_KEY=re_xxxxx (for email notifications)
+```
+
+## Security Headers (netlify.toml)
+- Content Security Policy (CSP) - allows Supabase connection
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- XSS Protection enabled
+- Referrer-Policy: strict-origin-when-cross-origin
+
 ## Recent Updates (Dec 2024)
+- Splash screen changed to once-per-session (was every visit)
+- Installer Login link added to footer on all pages
+- Installer placeholder page created (/installation.html)
+- Supabase lead capture replaces Netlify Forms as primary
+- Email notifications via Resend on new leads
+- Security headers added (CSP, etc.)
 - Hero video updated to show pedestrian crossing (Mixkit 4401)
 - Real testimonials section added (4 quotes from KBH, Limited Space, Mass Media Outdoor, SDN)
 - Client logos expanded (Ocean, Limited Space, Atmosphere, Smart Outdoor, KBH, etc.)
