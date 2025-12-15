@@ -281,6 +281,13 @@
                 });
 
                 if (response.ok) {
+                    // Send email notification (don't wait, don't block on failure)
+                    fetch('/.netlify/functions/notify-lead', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(leadData)
+                    }).catch(() => {}); // Silent fail - lead is already saved
+
                     // Success - redirect to thank you page
                     window.location.href = '/contact-success.html';
                 } else {
