@@ -535,14 +535,16 @@
             setTimeout(() => {
                 banner.classList.add('visible');
             }, 1500);
+        } else if (consent === 'accepted') {
+            // User previously accepted - load analytics
+            loadGoogleAnalytics();
         }
 
         if (acceptBtn) {
             acceptBtn.addEventListener('click', () => {
                 localStorage.setItem('cookieConsent', 'accepted');
                 banner.classList.remove('visible');
-                // Here you would initialize analytics if using them
-                // initAnalytics();
+                loadGoogleAnalytics();
             });
         }
 
@@ -552,6 +554,28 @@
                 banner.classList.remove('visible');
             });
         }
+    }
+
+    /**
+     * Load Google Analytics (only when consent given)
+     */
+    function loadGoogleAnalytics() {
+        // Prevent loading twice
+        if (window.gaLoaded) return;
+        window.gaLoaded = true;
+
+        // Load gtag.js
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-E5CEX5T9DZ';
+        document.head.appendChild(script);
+
+        // Initialize gtag
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', 'G-E5CEX5T9DZ');
     }
 
 })();
