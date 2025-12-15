@@ -1,7 +1,6 @@
 // ========================================
 // SESSION MANAGEMENT & AUTHENTICATION
 // ========================================
-console.log('[APP.JS] Loading, pathname:', window.location.pathname);
 
 const SessionManager = {
     getSession() {
@@ -19,10 +18,7 @@ const SessionManager = {
     },
 
     requireAuth() {
-        const isAuth = this.isAuthenticated();
-        console.log('[SESSION] requireAuth check:', isAuth);
-        if (!isAuth) {
-            console.log('[SESSION] Not authenticated, redirecting to login');
+        if (!this.isAuthenticated()) {
             window.location.href = 'login.html';
             return false;
         }
@@ -71,9 +67,7 @@ const SessionManager = {
 
 // Check authentication on page load (except login page)
 if (!window.location.pathname.includes('login.html')) {
-    console.log('[APP.JS] Checking auth...');
-    const authResult = SessionManager.requireAuth();
-    console.log('[APP.JS] Auth result:', authResult);
+    SessionManager.requireAuth();
 }
 
 // ========================================
