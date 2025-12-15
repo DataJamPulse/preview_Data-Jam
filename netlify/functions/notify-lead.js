@@ -28,7 +28,7 @@ exports.handler = async (event) => {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        from: 'Data Jam <hello@data-jam.com>',
+                        from: 'Data Jam Leads <leads@data-jam.com>',
                         to: NOTIFY_EMAILS,
                         subject: `New Lead: ${lead.name} - ${formatInterest(lead.interest)}`,
                         html: emailHtml
