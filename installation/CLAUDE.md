@@ -39,6 +39,10 @@
   - Logout button available from any page
   - Fixed session error handling (try-catch in getSession)
   - Disabled Supabase realtime subscriptions (not needed, was causing WebSocket errors)
+- ✅ **DASHBOARD NAVIGATION FIX**
+  - "New Install" links (sidebar and Quick Actions) now use explicit JS click handlers
+  - Workaround for interference from scripts/extensions that was blocking normal link navigation
+  - Uses `e.preventDefault()` + `window.location.href` to force navigation
 
 **2025-12-12 - Multi-User System, Enhancements & Project Tracking (Session 3):**
 - ✅ **MULTI-USER LOGIN SYSTEM** - Complete authentication

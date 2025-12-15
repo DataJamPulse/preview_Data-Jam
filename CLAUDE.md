@@ -260,6 +260,7 @@ HUBSPOT_API_KEY=pat-xxxxx (Private App token for CRM integration)
 - **Two-gate installer auth** - Pulse Reports access check → DataJam Portal validation
 - **Installer nav link** - "Installer" added to main site navigation on all pages
 - **CSP updates** - added cdnjs.cloudflare.com for html2pdf source maps
+- **Dashboard navigation fix** - "New Install" links now use explicit JS click handlers to force navigation (workaround for interference from scripts/extensions)
 
 ### Dec 2024
 - **HubSpot direct integration** - leads push to CRM immediately via API
