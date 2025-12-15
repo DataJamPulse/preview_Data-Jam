@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - DataJam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="logo.jpg" alt="DataJam" class="logo-image">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="index.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    New Install
+                </a>
+                <a href="installations.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    View Installs
+                </a>
+                <a href="inventory.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
+                        <line x1="12" y1="11" x2="12" y2="17"/>
+                        <line x1="9" y1="14" x2="15" y2="14"/>
+                    </svg>
+                    Inventory
+                </a>
+                <a href="projects.html" class="active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Projects
+                </a>
+                <a href="users.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Users
+                </a>
+                <a href="settings.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1>Projects</h1>
+                    <p class="subtitle">DataJam Portal projects and their installations</p>
+                </div>
+            </div>
+
+            <div class="project-filters">
+                <button class="filter-btn active" data-filter="all">All Projects (<span id="countAll">0</span>)</button>
+                <button class="filter-btn" data-filter="installed">With Installations (<span id="countInstalled">0</span>)</button>
+                <button class="filter-btn" data-filter="not-installed">No Installations (<span id="countNotInstalled">0</span>)</button>
+            </div>
+
+            <div id="projectGrid" class="project-grid">
+                <!-- Projects will be rendered here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Project Directory Manager
+        class ProjectManager {
+            constructor() {
+                this.installations = this.loadInstallations();
+                this.projects = this.buildProjectDirectory();
+                this.currentFilter = 'all';
+                this.init();
+            }
+
+            init() {
+                this.setupFilterButtons();
+                this.renderProjects();
+                this.updateCounts();
+            }
+
+            setupFilterButtons() {
+                const filterButtons = document.querySelectorAll('.filter-btn');
+                filterButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const filter = e.currentTarget.dataset.filter;
+                        this.setFilter(filter);
+                    });
+                });
+            }
+
+            setFilter(filter) {
+                this.currentFilter = filter;
+
+                // Update active button
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.filter === filter) {
+                        btn.classList.add('active');
+                    }
+                });
+
+                this.renderProjects();
+            }
+
+            updateCounts() {
+                const installedCount = this.projects.filter(p => p.hasInstallations).length;
+                const notInstalledCount = this.projects.filter(p => !p.hasInstallations).length;
+
+                document.getElementById('countAll').textContent = this.projects.length;
+                document.getElementById('countInstalled').textContent = installedCount;
+                document.getElementById('countNotInstalled').textContent = notInstalledCount;
+            }
+
+            loadInstallations() {
+                const stored = StorageUtil.safeGet('datajam_installations');
+                return StorageUtil.safeParse(stored, []);
+            }
+
+            loadShipments() {
+                const stored = localStorage.getItem('datajam_shipments');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            calculateProjectAllocations() {
+                const shipments = this.loadShipments();
+                const allocations = {};
+
+                shipments.forEach(shipment => {
+                    const dest = shipment.destination;
+                    if (!allocations[dest]) {
+                        allocations[dest] = {
+                            jamboxes: 0,
+                            cables: 0,
+                            shipmentCount: 0
+                        };
+                    }
+                    allocations[dest].jamboxes += shipment.jamboxQty || 0;
+                    allocations[dest].cables += shipment.cableQty || 0;
+                    allocations[dest].shipmentCount += 1;
+                });
+
+                return allocations;
+            }
+
+            buildProjectDirectory() {
+                // All projects from DataJam Portal
+                const allProjects = [
+                    // Shopping Centers & Malls
+                    { id: 'the-mall-wood-green', name: 'The Mall Wood Green', description: 'Shopping center' },
+                    { id: 'the-mall-luton', name: 'The Mall Luton', description: 'Shopping center' },
+                    { id: 'market-place-bolton', name: 'Market Place Bolton', description: 'Shopping center' },
+                    { id: 'festival-place', name: 'Festival Place', description: 'Shopping center' },
+                    { id: 'manchester-arndale', name: 'Manchester Arndale', description: 'Shopping center' },
+                    { id: 'bullring', name: 'Bullring', description: 'Shopping center' },
+                    { id: 'eldon-square', name: 'Eldon Square', description: 'Shopping center' },
+                    { id: 'bluewater', name: 'Bluewater', description: 'Shopping center' },
+                    { id: 'metrocentre', name: 'Metrocentre', description: 'Shopping center' },
+                    { id: 'walthamstow', name: 'Walthamstow', description: 'Shopping center' },
+                    { id: 'east-kilbride', name: 'East Kilbride', description: 'Shopping center' },
+                    { id: 'vanguada-mall', name: 'Vanguada Mall', description: 'Shopping center' },
+                    { id: 'shopping-centre', name: 'Shopping Centre', description: 'General shopping centers' },
+                    { id: 'malls-media-and-more', name: 'Malls Media And More', description: 'Shopping center network' },
+
+                    // Outdoor Media
+                    { id: 'limited-space', name: 'Limited Space', description: 'Premium outdoor advertising' },
+                    { id: 'smart-outdoor', name: 'Smart Outdoor', description: 'Digital outdoor advertising' },
+                    { id: 'smart-outdoor-sdn', name: 'Smart Outdoor (SDN)', description: 'Smart outdoor SDN network' },
+                    { id: 'big-outdoor', name: 'Big Outdoor', description: 'Large format outdoor advertising' },
+                    { id: 'dream-outdoor', name: 'Dream Outdoor', description: 'Outdoor advertising network' },
+                    { id: 'ocean', name: 'Ocean', description: 'Premium digital outdoor' },
+                    { id: 'mass-media-pedestrian', name: 'Mass Media - Pedestrian', description: 'Pedestrian-focused media' },
+                    { id: 'mass-media-roadside', name: 'Mass Media - Roadside', description: 'Roadside advertising' },
+                    { id: 'open-media', name: 'Open Media', description: 'Open media network' },
+                    { id: 'i-media', name: 'i-media', description: 'Interactive media solutions' },
+
+                    // Gyms & Fitness
+                    { id: 'ngm-gyms', name: 'NGM Gyms', description: 'Gym network' },
+                    { id: 'nrg-gyms', name: 'NRG Gyms', description: 'Gym network' },
+                    { id: 'fitness-first', name: 'Fitness First', description: 'Fitness center chain' },
+                    { id: 'atmosphere-gyms', name: 'Atmosphere Gyms', description: 'Gym network' },
+                    { id: 'gym-tv', name: 'Gym TV', description: 'Gym television network' },
+
+                    // Pubs, Bars & Nightlife
+                    { id: 'pubs', name: 'Pubs', description: 'Pub network' },
+                    { id: 'nightlife', name: 'Nightlife', description: 'Nightlife venues' },
+                    { id: 'marstons', name: 'Marstons', description: 'Pub chain' },
+                    { id: 'atmosphere-pubs-bars', name: 'Atmosphere Pubs & Bars', description: 'Pub and bar network' },
+                    { id: 'ministry', name: 'Ministry', description: 'Nightlife venue' },
+
+                    // Sports & Golf
+                    { id: 'golf-fang', name: 'Golf Fang', description: 'Golf venue' },
+                    { id: 'golf-clubs-sr', name: 'Golf Clubs S.R', description: 'Golf club network' },
+                    { id: 'golf-gcm', name: 'Golf (G.C.M)', description: 'Golf club network' },
+                    { id: 'team-sports', name: 'Team Sports', description: 'Sports facility network' },
+                    { id: 'goals-d6', name: 'Goals D6', description: 'Football facilities' },
+                    { id: 'goals-tv', name: 'Goals TV', description: 'Goals television network' },
+                    { id: 'stadium-centre', name: 'Stadium Centre', description: 'Stadium advertising' },
+
+                    // Universities & Colleges
+                    { id: 'ngm-universities', name: 'NGM Universities', description: 'University network' },
+                    { id: 'ngm-colleges', name: 'NGM Colleges', description: 'College network' },
+                    { id: 'u-centre-on-college', name: 'U Centre on College', description: 'College center' },
+
+                    // Leisure & Entertainment
+                    { id: 'thistles-sc', name: 'Thistles SC', description: 'Leisure center' },
+                    { id: 'the-beacon-centre', name: 'The Beacon Centre', description: 'Leisure center' },
+                    { id: 'the-exchange-ilford-sc', name: 'The Exchange Ilford SC', description: 'Leisure center' },
+                    { id: 'the-liberty-romford', name: 'The Liberty Romford', description: 'Leisure center' },
+                    { id: 'kingfisher', name: 'Kingfisher', description: 'Leisure center' },
+                    { id: 'jackson-square', name: 'Jackson Square', description: 'Leisure center' },
+                    { id: 'dolphin-centre-poole', name: 'Dolphin Centre Poole', description: 'Leisure center' },
+                    { id: 'leisure-centre-d6', name: 'Leisure Centre D6', description: 'Leisure center' },
+                    { id: 'cinema', name: 'Cinema', description: 'Cinema network' },
+                    { id: 'rock-box', name: 'Rock Box', description: 'Entertainment venue' },
+
+                    // Retail
+                    { id: 'tesco', name: 'Tesco', description: 'Retail network (6,000+ screens)' },
+                    { id: '17-central', name: '17&Central', description: 'Retail center' },
+                    { id: 'eastgate', name: 'Eastgate', description: 'Retail center' },
+
+                    // Transport & Travel
+                    { id: 'travel-units', name: 'Travel Units', description: 'Travel advertising' },
+                    { id: 'le-shuttle', name: 'Le Shuttle', description: 'Transport advertising' },
+                    { id: 'moto-service-stations', name: 'MOTO Service Stations', description: 'Motorway services' },
+                    { id: 'mfg', name: 'MFG', description: 'Forecourt advertising' },
+                    { id: 'la-bus', name: 'LA Bus', description: 'Bus advertising' },
+
+                    // Technology & Digital
+                    { id: 'vendi-tech', name: 'Vendi Tech', description: 'Vending technology' },
+                    { id: 'vendi-tech-testing', name: 'Vendi Tech - Testing', description: 'Vending tech trials' },
+                    { id: 'kiosks', name: 'Kiosks', description: 'Digital kiosks' },
+                    { id: 'seamless-digital', name: 'Seamless Digital', description: 'Digital signage network' },
+                    { id: 'smart-digi', name: 'Smart Digi', description: 'Digital solutions' },
+                    { id: 'dci-media', name: 'DCI Media', description: 'Digital media' },
+                    { id: 'instore-technology', name: 'Instore Technology', description: 'In-store digital' },
+
+                    // Media Companies
+                    { id: 'red-tail-creative-media', name: 'Red Tail Creative Media', description: 'Creative media solutions' },
+                    { id: 'lucid', name: 'Lucid', description: 'Media network' },
+                    { id: '75-media', name: '75 Media', description: 'Media solutions' },
+                    { id: 'ad-board', name: 'Ad Board', description: 'Advertising board network' },
+                    { id: 'ad-fuze', name: 'Ad Fuze', description: 'Advertising solutions' },
+                    { id: 'clearview-media-trial', name: 'Clearview Media Trial', description: 'Media trial project' },
+                    { id: 'native', name: 'Native', description: 'Native advertising' },
+                    { id: 'eighteen24', name: 'Eighteen24', description: 'Media network' },
+                    { id: 'gpm360', name: 'GPM360', description: 'Media solutions' },
+
+                    // Office & Commercial
+                    { id: 'office', name: 'Office', description: 'Office buildings' },
+                    { id: 'reception-others', name: 'Reception + Others', description: 'Reception areas' },
+                    { id: 'in-home-media', name: 'In Home Media', description: 'Residential media' },
+
+                    // Specific Locations
+                    { id: 'arran-encino', name: 'Arran Encino', description: 'Specific location' },
+                    { id: 'the-royal-exchange-tunbridge-wells', name: 'The Royal Exchange Tunbridge Wells', description: 'Shopping center' },
+                    { id: 'peninsular-place', name: 'Peninsular Place', description: 'Commercial center' },
+                    { id: 'the-block-austin', name: 'The Block – Austin', description: 'Commercial center' },
+                    { id: '5-twenty-four-five', name: '5 Twenty Four & 5 Twenty Five Angliana', description: 'Multiple locations' },
+                    { id: 'mercedes', name: 'Mercedes', description: 'Automotive dealership' },
+                    { id: 'scion', name: 'Scion', description: 'Automotive dealership' },
+                    { id: 'atmosphere', name: 'Atmosphere', description: 'Venue network' },
+
+                    // US Locations
+                    { id: 'public-dallas', name: 'Public - Dallas', description: 'Dallas location' },
+                    { id: 'c-screens', name: 'C Screens', description: 'Screen network' },
+                    { id: 'the-grove', name: 'The Grove', description: 'Shopping center' },
+                    { id: 'americana', name: 'Americana', description: 'Shopping center' },
+                    { id: 'pacific-palisades', name: 'Pacific Palisades', description: 'Shopping center' },
+                    { id: 'the-commons', name: 'The Commons', description: 'Shopping center' },
+
+                    // Other Networks
+                    { id: 'tnt', name: 'TNT', description: 'Media network' },
+                    { id: 'promo-group', name: 'Promo Group', description: 'Promotional network' },
+                    { id: 'rechargy', name: 'Rechargy', description: 'Charging station network' },
+                    { id: 'capitol', name: 'Capitol', description: 'Media network' },
+                    { id: 'new-tradition', name: 'New Tradition', description: 'Traditional media' },
+                    { id: 'heritage', name: 'Heritage', description: 'Heritage sites' },
+
+                    // Testing & Development
+                    { id: 'dj-dev-test', name: 'DJ Dev Test', description: 'Development testing' },
+                    { id: 'project-test', name: 'projectTest', description: 'Project testing' },
+                    { id: 'lab-test-devices', name: 'Lab Test Devices', description: 'Laboratory testing' },
+                    { id: 'test22', name: 'test22', description: 'Test project' },
+                    { id: 'europe-test', name: 'europe_test', description: 'European testing' },
+                    { id: 'enterprise-testing', name: 'Enterprise Testing', description: 'Enterprise test units' },
+                    { id: 'ota-testing-dj', name: 'OTA TESTING DJ', description: 'Over-the-air testing' },
+                    { id: 'custom-build-sandbox', name: 'Custom Build SandBox', description: 'Development sandbox' },
+                    { id: 'derby-trial-units', name: 'Derby Trial Units', description: 'Trial installations' },
+                    { id: 'sawtry-demo', name: 'Sawtry Demo', description: 'Demo installation' },
+                    { id: 'velocity-test-units', name: 'Velocity Test Units', description: 'Velocity testing' },
+                    { id: 'clear-channel-ota-test-units', name: 'Clear Channel OTA Test Units', description: 'Clear Channel OTA tests' },
+                    { id: 'clear-channel-ota-test-unit-2', name: 'Clear Channel OTA Test Unit 2', description: 'Clear Channel test 2' },
+                    { id: 'clear-channel-ota-test-unit-3', name: 'Clear Channel OTA Test Unit 3', description: 'Clear Channel test 3' },
+                    { id: 'clear-channel-ota-test-unit-4', name: 'Clear Channel OTA Test Unit 4', description: 'Clear Channel test 4' },
+                    { id: 'clear-channel-ota-test-unit-5', name: 'Clear Channel OTA Test Unit 5', description: 'Clear Channel test 5' },
+                    { id: 'route-demo-unit', name: 'ROUTE DEMO UNIT', description: 'Route demo' },
+                    { id: 'uclansu-trial', name: 'Uclansu Trial', description: 'Trial project' },
+                    { id: 'alex-testing', name: 'alex testing', description: 'Testing project' },
+                    { id: 'test', name: 'TEST', description: 'Test project' },
+
+                    // Internal Projects
+                    { id: 'acms', name: 'ACMS', description: 'Internal system' },
+                    { id: 'data-jam', name: 'Data Jam', description: 'DataJam internal' },
+                    { id: 'acc', name: 'ACC', description: 'Internal project' }
+                ];
+
+                // Get shipment allocations
+                const allocations = this.calculateProjectAllocations();
+
+                // Build project data with installation counts and shipment allocations
+                const projectData = allProjects.map(project => {
+                    const projectInstalls = this.installations.filter(install =>
+                        install.projectName === project.id
+                    );
+
+                    // Get unique customers for this project
+                    const customers = new Set(projectInstalls.map(i => i.clientName));
+
+                    // Get unique location types
+                    const locationTypes = new Set(projectInstalls.map(i => i.locationType));
+
+                    // Count JamBoxes (installations with jamboxId)
+                    const jamboxCount = projectInstalls.filter(i => i.jamboxId && i.jamboxId.trim() !== '').length;
+
+                    // Get date range
+                    const dates = projectInstalls.map(i => new Date(i.installDate)).sort((a, b) => a - b);
+                    const firstInstall = dates.length > 0 ? dates[0] : null;
+                    const lastInstall = dates.length > 0 ? dates[dates.length - 1] : null;
+
+                    // Get allocated stock from shipments
+                    const allocation = allocations[project.name] || { jamboxes: 0, cables: 0, shipmentCount: 0 };
+
+                    return {
+                        ...project,
+                        installCount: projectInstalls.length,
+                        jamboxCount: jamboxCount,
+                        customerCount: customers.size,
+                        customers: Array.from(customers),
+                        locationTypes: Array.from(locationTypes),
+                        installations: projectInstalls,
+                        firstInstall,
+                        lastInstall,
+                        hasInstallations: projectInstalls.length > 0,
+                        // Shipment allocation data
+                        allocatedJamboxes: allocation.jamboxes,
+                        allocatedCables: allocation.cables,
+                        shipmentCount: allocation.shipmentCount,
+                        hasAllocations: allocation.jamboxes > 0 || allocation.cables > 0
+                    };
+                });
+
+                // Sort: projects with installations first, then by install count, then alphabetically
+                return projectData.sort((a, b) => {
+                    if (a.hasInstallations && !b.hasInstallations) return -1;
+                    if (!a.hasInstallations && b.hasInstallations) return 1;
+                    if (a.installCount !== b.installCount) return b.installCount - a.installCount;
+                    return a.name.localeCompare(b.name);
+                });
+            }
+
+            renderProjects() {
+                const grid = document.getElementById('projectGrid');
+                if (!grid) return;
+
+                // Filter projects based on current filter
+                let filteredProjects = this.projects;
+                if (this.currentFilter === 'installed') {
+                    filteredProjects = this.projects.filter(p => p.hasInstallations);
+                } else if (this.currentFilter === 'not-installed') {
+                    filteredProjects = this.projects.filter(p => !p.hasInstallations);
+                }
+
+                if (filteredProjects.length === 0) {
+                    const filterName = this.currentFilter === 'installed' ? 'with installations' :
+                                      this.currentFilter === 'not-installed' ? 'without installations' : '';
+                    grid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <h2>No Projects ${filterName}</h2>
+                            <p>No projects match this filter.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = filteredProjects.map(project => this.renderProjectCard(project)).join('');
+            }
+
+            renderProjectCard(project) {
+                const statusClass = project.hasInstallations ? 'project-active' : 'project-inactive';
+                const statusText = project.hasInstallations ? 'Active' : 'No installations yet';
+
+                const dateRange = project.hasInstallations && project.firstInstall && project.lastInstall
+                    ? `${project.firstInstall.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} - ${project.lastInstall.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`
+                    : 'No dates';
+
+                // Check if logo file exists for this project
+                const logoFiles = {
+                    'acms': 'acms.webp',
+                    // Add more logo files here as needed
+                };
+                const logoFile = logoFiles[project.id.toLowerCase()];
+
+                // Generate initials for logo (first letter of first two words)
+                const words = project.name.split(' ');
+                const initials = words.length > 1
+                    ? (words[0][0] + words[1][0]).toUpperCase()
+                    : project.name.substring(0, 2).toUpperCase();
+
+                // Generate a consistent color based on project name
+                const colors = [
+                    ['#E62F6E', '#E94B52'], // pink to orange
+                    ['#14B8A6', '#06B6D4'], // teal to cyan
+                    ['#F59E0B', '#FBBF24'], // orange to yellow
+                    ['#8B5CF6', '#A78BFA'], // purple to light purple
+                    ['#EC4899', '#F472B6'], // pink to light pink
+                    ['#10B981', '#34D399'], // green to light green
+                ];
+                const colorIndex = project.name.charCodeAt(0) % colors.length;
+                const [color1, color2] = colors[colorIndex];
+
+                // Build logo HTML
+                const logoHTML = logoFile
+                    ? `<div class="project-logo project-logo-image">
+                        <img src="${logoFile}" alt="${project.name} logo" />
+                       </div>`
+                    : `<div class="project-logo" style="background: linear-gradient(135deg, ${color1} 0%, ${color2} 100%);">
+                        <span>${initials}</span>
+                       </div>`;
+
+                return `
+                    <div class="project-card ${statusClass}">
+                        <div class="project-card-header">
+                            ${logoHTML}
+                            <div style="flex: 1;">
+                                <h3>${project.name}</h3>
+                                <p class="project-description">${project.description}</p>
+                            </div>
+                            <span class="project-status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="project-card-body">
+                            <div class="project-stats">
+                                <div class="project-stat">
+                                    <div class="project-stat-value">${project.installCount}</div>
+                                    <div class="project-stat-label">Installation${project.installCount !== 1 ? 's' : ''}</div>
+                                </div>
+                                <div class="project-stat">
+                                    <div class="project-stat-value">${project.jamboxCount}</div>
+                                    <div class="project-stat-label">JamBox${project.jamboxCount !== 1 ? 'es' : ''}</div>
+                                </div>
+                                <div class="project-stat">
+                                    <div class="project-stat-value">${project.customerCount}</div>
+                                    <div class="project-stat-label">Venue${project.customerCount !== 1 ? 's' : ''}</div>
+                                </div>
+                            </div>
+                            ${project.hasAllocations ? `
+                                <div class="project-allocations" style="margin-top: 16px; padding: 12px; background: rgba(230, 47, 110, 0.05); border-left: 3px solid var(--datajam-pink); border-radius: 4px;">
+                                    <div style="font-weight: 500; color: var(--datajam-pink); margin-bottom: 8px; font-size: 13px;">📦 Allocated Stock (${project.shipmentCount} shipment${project.shipmentCount !== 1 ? 's' : ''})</div>
+                                    <div style="display: flex; gap: 16px; font-size: 14px; color: var(--text-secondary);">
+                                        <div>
+                                            <span style="font-weight: 500; color: var(--text-primary);">${project.allocatedJamboxes}</span> JamBox${project.allocatedJamboxes !== 1 ? 'es' : ''}
+                                        </div>
+                                        <div>
+                                            <span style="font-weight: 500; color: var(--text-primary);">${project.allocatedCables}</span> Cable${project.allocatedCables !== 1 ? 's' : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${project.hasInstallations ? `
+                                <div class="project-info">
+                                    <strong>Timeline:</strong> ${dateRange}
+                                </div>
+                                ${project.customers.length > 0 ? `
+                                    <div class="project-info">
+                                        <strong>Customers:</strong> ${project.customers.slice(0, 3).join(', ')}${project.customers.length > 3 ? ` +${project.customers.length - 3} more` : ''}
+                                    </div>
+                                ` : ''}
+                                ${project.locationTypes.length > 0 ? `
+                                    <div class="project-info">
+                                        <strong>Locations:</strong> ${project.locationTypes.join(', ')}
+                                    </div>
+                                ` : ''}
+                            ` : `
+                                <div class="project-empty-state">
+                                    <p>No installations for this project yet.</p>
+                                </div>
+                            `}
+                        </div>
+                        ${project.hasInstallations ? `
+                            <div class="project-card-actions">
+                                <button class="btn-small btn-view" onclick="projectManager.viewProjectDetails('${project.id}')">View Details</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            viewProjectDetails(projectId) {
+                const project = this.projects.find(p => p.id === projectId);
+                if (!project || !project.hasInstallations) return;
+
+                // Group installations by customer
+                const installsByCustomer = new Map();
+                project.installations.forEach(install => {
+                    if (!installsByCustomer.has(install.clientName)) {
+                        installsByCustomer.set(install.clientName, []);
+                    }
+                    installsByCustomer.get(install.clientName).push(install);
+                });
+
+                const customersList = Array.from(installsByCustomer.entries()).map(([customerName, installs]) => {
+                    const installList = installs.map(install => {
+                        const date = new Date(install.installDate).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+
+                        return `
+                            <div class="install-summary-item">
+                                <div class="install-summary-header">
+                                    <span class="location-type-badge">${install.locationType}</span>
+                                    <span class="location-date">${date}</span>
+                                </div>
+                                <div class="location-address">${install.installAddress}</div>
+                                ${install.jamboxId ? `<div class="location-jambox">JamBox ID: ${install.jamboxId}</div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="customer-section">
+                            <h4 style="color: var(--datajam-orange); margin-bottom: 12px; font-size: 16px;">
+                                ${customerName} (${installs.length} installation${installs.length !== 1 ? 's' : ''})
+                            </h4>
+                            <div style="display: grid; gap: 12px;">
+                                ${installList}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                        <h2>${project.name}</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 24px;">${project.description}</p>
+
+                        <div style="text-align: left; color: var(--text-secondary);">
+                            <div class="project-stats" style="margin-bottom: 24px; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; background-color: var(--bg-secondary);">
+                                <div class="project-stat">
+                                    <div class="project-stat-value">${project.installCount}</div>
+                                    <div class="project-stat-label">Total Installations</div>
+                                </div>
+                                <div class="project-stat">
+                                    <div class="project-stat-value">${project.jamboxCount}</div>
+                                    <div class="project-stat-label">JamBoxes</div>
+                                </div>
+                                <div class="project-stat">
+                                    <div class="project-stat-value">${project.customerCount}</div>
+                                    <div class="project-stat-label">Venues</div>
+                                </div>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 24px;">
+                                <h3 style="color: var(--datajam-pink); margin-bottom: 16px;">Installations by Customer</h3>
+                                <div style="display: grid; gap: 24px;">
+                                    ${customersList}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions" style="margin-top: 32px;">
+                            <button class="btn-secondary" onclick="window.location.href='installations.html'">View All Installations</button>
+                            <button class="btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+            }
+        }
+
+        // Initialize on page load
+        let projectManager;
+        document.addEventListener('DOMContentLoaded', () => {
+            projectManager = new ProjectManager();
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - DataJam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="logo.jpg" alt="DataJam" class="logo-image">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="index.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    New Install
+                </a>
+                <a href="installations.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    View Installs
+                </a>
+                <a href="inventory.html" class="active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
+                        <line x1="12" y1="11" x2="12" y2="17"/>
+                        <line x1="9" y1="14" x2="15" y2="14"/>
+                    </svg>
+                    Inventory
+                </a>
+                <a href="projects.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Projects
+                </a>
+                <a href="users.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Users
+                </a>
+                <a href="settings.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 32px;">
+                <div>
+                    <h1>Inventory Management</h1>
+                    <p class="subtitle">Track JamBox devices, cables, and equipment shipments</p>
+                </div>
+            </div>
+
+            <!-- Current Stock Overview -->
+            <div class="stats-grid" style="margin-bottom: 32px;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #E62F6E 0%, #E94B52 100%);">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-content">
+                        <div class="stat-label">JamBox Stock</div>
+                        <div class="stat-value" id="jamboxStock">0</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #E94B52 0%, #F59E0B 100%);">
+                    <div class="stat-icon">🔌</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Cable Stock</div>
+                        <div class="stat-value" id="cableStock">0</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%);">
+                    <div class="stat-icon">🚚</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Active Shipments</div>
+                        <div class="stat-value" id="activeShipments">0</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Deployed</div>
+                        <div class="stat-value" id="totalDeployed">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs for different sections -->
+            <div class="inventory-tabs" style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid var(--border-color); padding-bottom: 0;">
+                <button class="inventory-tab active" data-tab="stock">
+                    📦 Stock Management
+                </button>
+                <button class="inventory-tab" data-tab="shipments">
+                    🚚 Active Shipments
+                </button>
+                <button class="inventory-tab" data-tab="delivered">
+                    ✅ Delivered
+                </button>
+                <button class="inventory-tab" data-tab="history">
+                    📜 History
+                </button>
+            </div>
+
+            <!-- Stock Management Section -->
+            <div class="tab-content active" id="stockTab">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+                    <!-- Add Stock Form -->
+                    <div class="form-section">
+                        <h2>Add Stock</h2>
+                        <form id="addStockForm">
+                            <div class="form-group">
+                                <label for="stockType">Item Type *</label>
+                                <select id="stockType" required>
+                                    <option value="">Select item type</option>
+                                    <option value="jambox">JamBox Device</option>
+                                    <option value="cable">Cable</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockQuantity">Quantity *</label>
+                                <input type="number" id="stockQuantity" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockNotes">Notes</label>
+                                <textarea id="stockNotes" rows="3" placeholder="Purchase order, supplier, etc."></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">Add to Stock</button>
+                        </form>
+                    </div>
+
+                    <!-- Remove Stock Form -->
+                    <div class="form-section">
+                        <h2>Remove Stock</h2>
+                        <form id="removeStockForm">
+                            <div class="form-group">
+                                <label for="removeType">Item Type *</label>
+                                <select id="removeType" required>
+                                    <option value="">Select item type</option>
+                                    <option value="jambox">JamBox Device</option>
+                                    <option value="cable">Cable</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="removeQuantity">Quantity *</label>
+                                <input type="number" id="removeQuantity" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="removeReason">Reason *</label>
+                                <select id="removeReason" required>
+                                    <option value="">Select reason</option>
+                                    <option value="damaged">Damaged</option>
+                                    <option value="lost">Lost</option>
+                                    <option value="returned">Returned to Supplier</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="removeNotes">Notes</label>
+                                <textarea id="removeNotes" rows="2" placeholder="Additional details"></textarea>
+                            </div>
+                            <button type="submit" class="btn-delete">Remove from Stock</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipments Section -->
+            <div class="tab-content" id="shipmentsTab">
+                <div class="form-section" style="margin-bottom: 32px;">
+                    <h2>Create New Shipment</h2>
+                    <form id="shipmentForm">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="shipDestination">Destination / Project *</label>
+                                <select id="shipDestination" required>
+                                    <option value="">Select destination...</option>
+                                    <optgroup label="Shopping Centers & Malls">
+                                        <option value="The Mall Wood Green">The Mall Wood Green</option>
+                                        <option value="The Mall Luton">The Mall Luton</option>
+                                        <option value="Market Place Bolton">Market Place Bolton</option>
+                                        <option value="Festival Place">Festival Place</option>
+                                        <option value="Manchester Arndale">Manchester Arndale</option>
+                                        <option value="Bullring">Bullring</option>
+                                        <option value="Eldon Square">Eldon Square</option>
+                                        <option value="Bluewater">Bluewater</option>
+                                        <option value="Metrocentre">Metrocentre</option>
+                                        <option value="Walthamstow">Walthamstow</option>
+                                        <option value="East Kilbride">East Kilbride</option>
+                                        <option value="Vanguada Mall">Vanguada Mall</option>
+                                        <option value="The Grove">The Grove</option>
+                                        <option value="Americana">Americana</option>
+                                        <option value="Pacific Palisades">Pacific Palisades</option>
+                                        <option value="The Commons">The Commons</option>
+                                    </optgroup>
+                                    <optgroup label="Outdoor Media">
+                                        <option value="Limited Space">Limited Space</option>
+                                        <option value="Smart Outdoor">Smart Outdoor</option>
+                                        <option value="Big Outdoor">Big Outdoor</option>
+                                        <option value="Dream Outdoor">Dream Outdoor</option>
+                                        <option value="Ocean">Ocean</option>
+                                        <option value="Mass Media - Pedestrian">Mass Media - Pedestrian</option>
+                                        <option value="Mass Media - Roadside">Mass Media - Roadside</option>
+                                        <option value="Open Media">Open Media</option>
+                                    </optgroup>
+                                    <optgroup label="Gyms & Fitness">
+                                        <option value="NGM Gyms">NGM Gyms</option>
+                                        <option value="NRG Gyms">NRG Gyms</option>
+                                        <option value="Fitness First">Fitness First</option>
+                                        <option value="Atmosphere Gyms">Atmosphere Gyms</option>
+                                        <option value="Gym TV">Gym TV</option>
+                                    </optgroup>
+                                    <optgroup label="Sports & Recreation">
+                                        <option value="Team Sports">Team Sports</option>
+                                        <option value="Goals D6">Goals D6</option>
+                                        <option value="Goals TV">Goals TV</option>
+                                        <option value="Golf Fang">Golf Fang</option>
+                                        <option value="Golf Clubs S.R">Golf Clubs S.R</option>
+                                        <option value="Stadium Centre">Stadium Centre</option>
+                                    </optgroup>
+                                    <optgroup label="Pubs & Nightlife">
+                                        <option value="Pubs">Pubs</option>
+                                        <option value="Nightlife">Nightlife</option>
+                                        <option value="Marstons">Marstons</option>
+                                        <option value="Atmosphere Pubs & Bars">Atmosphere Pubs & Bars</option>
+                                        <option value="Ministry">Ministry</option>
+                                    </optgroup>
+                                    <optgroup label="Leisure Centers">
+                                        <option value="Thistles SC">Thistles SC</option>
+                                        <option value="The Beacon Centre">The Beacon Centre</option>
+                                        <option value="The Exchange Ilford SC">The Exchange Ilford SC</option>
+                                        <option value="The Liberty Romford">The Liberty Romford</option>
+                                        <option value="Kingfisher">Kingfisher</option>
+                                        <option value="Jackson Square">Jackson Square</option>
+                                        <option value="Dolphin Centre Poole">Dolphin Centre Poole</option>
+                                    </optgroup>
+                                    <optgroup label="Retail">
+                                        <option value="Tesco">Tesco</option>
+                                        <option value="17&Central">17&Central</option>
+                                        <option value="Eastgate">Eastgate</option>
+                                    </optgroup>
+                                    <optgroup label="Transport & Travel">
+                                        <option value="Travel Units">Travel Units</option>
+                                        <option value="Le Shuttle">Le Shuttle</option>
+                                        <option value="MOTO Service Stations">MOTO Service Stations</option>
+                                        <option value="MFG">MFG</option>
+                                        <option value="LA Bus">LA Bus</option>
+                                    </optgroup>
+                                    <optgroup label="Digital & Media">
+                                        <option value="Seamless Digital">Seamless Digital</option>
+                                        <option value="Smart Digi">Smart Digi</option>
+                                        <option value="DCI Media">DCI Media</option>
+                                        <option value="Red Tail Creative Media">Red Tail Creative Media</option>
+                                        <option value="75 Media">75 Media</option>
+                                        <option value="Ad Board">Ad Board</option>
+                                        <option value="i-media">i-media</option>
+                                    </optgroup>
+                                    <optgroup label="Education">
+                                        <option value="NGM Universities">NGM Universities</option>
+                                        <option value="NGM Colleges">NGM Colleges</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="Cinema">Cinema</option>
+                                        <option value="Rock Box">Rock Box</option>
+                                        <option value="Vendi Tech">Vendi Tech</option>
+                                        <option value="Kiosks">Kiosks</option>
+                                        <option value="Data Jam">Data Jam (Internal)</option>
+                                        <option value="__custom__">Other (Custom)...</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="form-group" id="customDestinationGroup" style="display: none; grid-column: span 2;">
+                                <label for="customDestination">Custom Destination *</label>
+                                <input type="text" id="customDestination" placeholder="Enter custom destination (e.g., Sports Revolution, Bauer Media)">
+                            </div>
+                            <div class="form-group">
+                                <label for="shipDate">Shipment Date *</label>
+                                <input type="date" id="shipDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="shipJamboxQty">JamBox Quantity</label>
+                                <input type="number" id="shipJamboxQty" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="shipCableQty">Cable Quantity</label>
+                                <input type="number" id="shipCableQty" min="0" value="0">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="shipNotes">Shipping Notes</label>
+                                <textarea id="shipNotes" rows="3" placeholder="Tracking number, carrier, expected delivery, etc."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Create Shipment</button>
+                    </form>
+                </div>
+
+                <h2 style="margin-bottom: 16px;">Active Shipments</h2>
+                <div id="shipmentsGrid" class="install-grid">
+                    <!-- Shipments will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Delivered Shipments Section -->
+            <div class="tab-content" id="deliveredTab">
+                <h2 style="margin-bottom: 16px;">Delivered Shipments</h2>
+                <div id="deliveredGrid" class="install-grid">
+                    <!-- Delivered shipments will be rendered here -->
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="tab-content" id="historyTab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Stock Movement History</h2>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="exportInventoryCSV" class="btn-secondary">Export CSV</button>
+                        <button id="clearInventoryHistory" class="btn-delete">Clear History</button>
+                    </div>
+                </div>
+                <div id="historyList">
+                    <!-- History entries will be rendered here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize inventory manager when page loads
+        let inventoryManager;
+        if (typeof InventoryManager !== 'undefined') {
+            inventoryManager = new InventoryManager();
+        }
+    </script>
+</body>
+</html>

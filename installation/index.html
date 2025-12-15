@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataJam Installation App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="logo.jpg" alt="DataJam" class="logo-image">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="index.html" class="active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    New Install
+                </a>
+                <a href="installations.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    View Installs
+                </a>
+                <a href="inventory.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
+                        <line x1="12" y1="11" x2="12" y2="17"/>
+                        <line x1="9" y1="14" x2="15" y2="14"/>
+                    </svg>
+                    Inventory
+                </a>
+                <a href="projects.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Projects
+                </a>
+                <a href="users.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Users
+                </a>
+                <a href="settings.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h1>JamBox Installation</h1>
+            <p class="subtitle">Record installation details and photos</p>
+
+            <form id="installForm">
+                <div class="form-section">
+                    <h2>Venue Information</h2>
+
+                    <div class="form-group">
+                        <label for="clientName">Venue *</label>
+                        <input type="text" id="clientName" name="clientName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="clientContact">Contact Person</label>
+                        <input type="text" id="clientContact" name="clientContact">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="clientEmail">Email</label>
+                        <input type="email" id="clientEmail" name="clientEmail">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="clientPhone">Phone</label>
+                        <input type="tel" id="clientPhone" name="clientPhone">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Location Details</h2>
+
+                    <div class="form-group">
+                        <label for="projectName">Project</label>
+                        <select id="projectName" name="projectName">
+                            <option value="">Select project...</option>
+
+                            <optgroup label="Shopping Centers & Malls">
+                                <option value="the-mall-wood-green">The Mall Wood Green</option>
+                                <option value="the-mall-luton">The Mall Luton</option>
+                                <option value="market-place-bolton">Market Place Bolton</option>
+                                <option value="festival-place">Festival Place</option>
+                                <option value="manchester-arndale">Manchester Arndale</option>
+                                <option value="bullring">Bullring</option>
+                                <option value="eldon-square">Eldon Square</option>
+                                <option value="bluewater">Bluewater</option>
+                                <option value="metrocentre">Metrocentre</option>
+                                <option value="walthamstow">Walthamstow</option>
+                                <option value="east-kilbride">East Kilbride</option>
+                                <option value="vanguada-mall">Vanguada Mall</option>
+                                <option value="shopping-centre">Shopping Centre</option>
+                                <option value="malls-media-and-more">Malls Media And More</option>
+                                <option value="the-grove">The Grove</option>
+                                <option value="americana">Americana</option>
+                                <option value="pacific-palisades">Pacific Palisades</option>
+                                <option value="the-commons">The Commons</option>
+                            </optgroup>
+
+                            <optgroup label="Outdoor Media">
+                                <option value="limited-space">Limited Space</option>
+                                <option value="smart-outdoor">Smart Outdoor</option>
+                                <option value="smart-outdoor-sdn">Smart Outdoor (SDN)</option>
+                                <option value="big-outdoor">Big Outdoor</option>
+                                <option value="dream-outdoor">Dream Outdoor</option>
+                                <option value="ocean">Ocean</option>
+                                <option value="mass-media-pedestrian">Mass Media - Pedestrian</option>
+                                <option value="mass-media-roadside">Mass Media - Roadside</option>
+                                <option value="open-media">Open Media</option>
+                                <option value="i-media">i-media</option>
+                            </optgroup>
+
+                            <optgroup label="Gyms & Fitness">
+                                <option value="ngm-gyms">NGM Gyms</option>
+                                <option value="nrg-gyms">NRG Gyms</option>
+                                <option value="fitness-first">Fitness First</option>
+                                <option value="atmosphere-gyms">Atmosphere Gyms</option>
+                                <option value="gym-tv">Gym TV</option>
+                            </optgroup>
+
+                            <optgroup label="Pubs, Bars & Nightlife">
+                                <option value="pubs">Pubs</option>
+                                <option value="nightlife">Nightlife</option>
+                                <option value="marstons">Marstons</option>
+                                <option value="atmosphere-pubs-bars">Atmosphere Pubs & Bars</option>
+                                <option value="ministry">Ministry</option>
+                            </optgroup>
+
+                            <optgroup label="Sports & Golf">
+                                <option value="golf-fang">Golf Fang</option>
+                                <option value="golf-clubs-sr">Golf Clubs S.R</option>
+                                <option value="golf-gcm">Golf (G.C.M)</option>
+                                <option value="team-sports">Team Sports</option>
+                                <option value="goals-d6">Goals D6</option>
+                                <option value="goals-tv">Goals TV</option>
+                                <option value="stadium-centre">Stadium Centre</option>
+                            </optgroup>
+
+                            <optgroup label="Universities & Colleges">
+                                <option value="ngm-universities">NGM Universities</option>
+                                <option value="ngm-colleges">NGM Colleges</option>
+                                <option value="u-centre-on-college">U Centre on College</option>
+                            </optgroup>
+
+                            <optgroup label="Leisure & Entertainment">
+                                <option value="thistles-sc">Thistles SC</option>
+                                <option value="the-beacon-centre">The Beacon Centre</option>
+                                <option value="the-exchange-ilford-sc">The Exchange Ilford SC</option>
+                                <option value="the-liberty-romford">The Liberty Romford</option>
+                                <option value="kingfisher">Kingfisher</option>
+                                <option value="jackson-square">Jackson Square</option>
+                                <option value="dolphin-centre-poole">Dolphin Centre Poole</option>
+                                <option value="leisure-centre-d6">Leisure Centre D6</option>
+                                <option value="cinema">Cinema</option>
+                                <option value="rock-box">Rock Box</option>
+                            </optgroup>
+
+                            <optgroup label="Retail">
+                                <option value="tesco">Tesco</option>
+                                <option value="17-central">17&Central</option>
+                                <option value="eastgate">Eastgate</option>
+                            </optgroup>
+
+                            <optgroup label="Transport & Travel">
+                                <option value="travel-units">Travel Units</option>
+                                <option value="le-shuttle">Le Shuttle</option>
+                                <option value="moto-service-stations">MOTO Service Stations</option>
+                                <option value="mfg">MFG</option>
+                                <option value="la-bus">LA Bus</option>
+                            </optgroup>
+
+                            <optgroup label="Technology & Digital">
+                                <option value="vendi-tech">Vendi Tech</option>
+                                <option value="vendi-tech-testing">Vendi Tech - Testing</option>
+                                <option value="kiosks">Kiosks</option>
+                                <option value="seamless-digital">Seamless Digital</option>
+                                <option value="smart-digi">Smart Digi</option>
+                                <option value="dci-media">DCI Media</option>
+                                <option value="instore-technology">Instore Technology</option>
+                            </optgroup>
+
+                            <optgroup label="Media Companies">
+                                <option value="red-tail-creative-media">Red Tail Creative Media</option>
+                                <option value="lucid">Lucid</option>
+                                <option value="75-media">75 Media</option>
+                                <option value="ad-board">Ad Board</option>
+                                <option value="ad-fuze">Ad Fuze</option>
+                                <option value="clearview-media-trial">Clearview Media Trial</option>
+                                <option value="native">Native</option>
+                                <option value="eighteen24">Eighteen24</option>
+                                <option value="gpm360">GPM360</option>
+                                <option value="tnt">TNT</option>
+                                <option value="promo-group">Promo Group</option>
+                                <option value="capitol">Capitol</option>
+                                <option value="new-tradition">New Tradition</option>
+                            </optgroup>
+
+                            <optgroup label="Office & Commercial">
+                                <option value="office">Office</option>
+                                <option value="reception-others">Reception + Others</option>
+                                <option value="in-home-media">In Home Media</option>
+                            </optgroup>
+
+                            <optgroup label="Specific Locations">
+                                <option value="arran-encino">Arran Encino</option>
+                                <option value="the-royal-exchange-tunbridge-wells">The Royal Exchange Tunbridge Wells</option>
+                                <option value="peninsular-place">Peninsular Place</option>
+                                <option value="the-block-austin">The Block – Austin</option>
+                                <option value="5-twenty-four-five">5 Twenty Four & 5 Twenty Five Angliana</option>
+                                <option value="mercedes">Mercedes</option>
+                                <option value="scion">Scion</option>
+                                <option value="atmosphere">Atmosphere</option>
+                                <option value="public-dallas">Public - Dallas</option>
+                                <option value="c-screens">C Screens</option>
+                            </optgroup>
+
+                            <optgroup label="Other Networks">
+                                <option value="rechargy">Rechargy</option>
+                                <option value="heritage">Heritage</option>
+                            </optgroup>
+
+                            <optgroup label="Testing & Development">
+                                <option value="dj-dev-test">DJ Dev Test</option>
+                                <option value="project-test">projectTest</option>
+                                <option value="lab-test-devices">Lab Test Devices</option>
+                                <option value="test22">test22</option>
+                                <option value="europe-test">europe_test</option>
+                                <option value="enterprise-testing">Enterprise Testing</option>
+                                <option value="ota-testing-dj">OTA TESTING DJ</option>
+                                <option value="custom-build-sandbox">Custom Build SandBox</option>
+                                <option value="derby-trial-units">Derby Trial Units</option>
+                                <option value="sawtry-demo">Sawtry Demo</option>
+                                <option value="velocity-test-units">Velocity Test Units</option>
+                                <option value="clear-channel-ota-test-units">Clear Channel OTA Test Units</option>
+                                <option value="clear-channel-ota-test-unit-2">Clear Channel OTA Test Unit 2</option>
+                                <option value="clear-channel-ota-test-unit-3">Clear Channel OTA Test Unit 3</option>
+                                <option value="clear-channel-ota-test-unit-4">Clear Channel OTA Test Unit 4</option>
+                                <option value="clear-channel-ota-test-unit-5">Clear Channel OTA Test Unit 5</option>
+                                <option value="route-demo-unit">ROUTE DEMO UNIT</option>
+                                <option value="uclansu-trial">Uclansu Trial</option>
+                                <option value="alex-testing">alex testing</option>
+                                <option value="test">TEST</option>
+                            </optgroup>
+
+                            <optgroup label="Internal Projects">
+                                <option value="acms">ACMS</option>
+                                <option value="data-jam">Data Jam</option>
+                                <option value="acc">ACC</option>
+                            </optgroup>
+                        </select>
+                        <small>Select the project this installation belongs to (from DataJam Portal)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="locationType">Location Type *</label>
+                        <select id="locationType" name="locationType" required>
+                            <option value="">Select type...</option>
+                            <option value="billboard">Billboard</option>
+                            <option value="digital-screen">Digital Screen</option>
+                            <option value="bus-shelter">Bus Shelter</option>
+                            <option value="shopping-center">Shopping Center</option>
+                            <option value="transit-station">Transit Station</option>
+                            <option value="street-furniture">Street Furniture</option>
+                            <option value="leisure-centre">Leisure Centre</option>
+                            <option value="nightlife">Nightlife</option>
+                            <option value="pubs">Pubs</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="installAddress">Installation Address *</label>
+                        <textarea id="installAddress" name="installAddress" rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jamboxId">JamBox ID</label>
+                        <input type="text" id="jamboxId" name="jamboxId" placeholder="e.g., JB-0001">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Network Configuration</h2>
+
+                    <div class="form-group">
+                        <label for="ssid">WiFi SSID *</label>
+                        <input type="text" id="ssid" name="ssid" list="ssidHistory" required autocomplete="off">
+                        <datalist id="ssidHistory"></datalist>
+                        <small>Start typing to see previously used networks</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">WiFi Password *</label>
+                        <input type="text" id="password" name="password" required>
+                        <small>Store securely - this will be saved locally only</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ipAddress">Device IP Address</label>
+                        <input type="text" id="ipAddress" name="ipAddress" placeholder="192.168.1.100">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Installation Photos</h2>
+
+                    <div class="form-group">
+                        <label>Upload Photos</label>
+                        <div class="photo-upload-area">
+                            <input type="file" id="photoInput" accept="image/*" multiple capture="environment">
+                            <label for="photoInput" class="photo-upload-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <span>Add Photos</span>
+                            </label>
+                        </div>
+                        <div id="photoPreview" class="photo-preview"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Additional Notes</h2>
+
+                    <div class="form-group">
+                        <label for="status">Installation Status *</label>
+                        <select id="status" name="status" required>
+                            <option value="">Select status...</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="issue">Issue/Problem</option>
+                        </select>
+                        <small>Track the current status of this installation</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="installDate">Installation Date *</label>
+                        <input type="date" id="installDate" name="installDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="installTime">Installation Time</label>
+                        <input type="time" id="installTime" name="installTime">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notes & Observations</label>
+                        <textarea id="notes" name="notes" rows="4" placeholder="Any issues, observations, or special instructions..."></textarea>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="deviceTested" name="deviceTested">
+                            <span>Device tested and operational</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="networkVerified" name="networkVerified">
+                            <span>Network connection verified</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Installation</button>
+                    <button type="reset" class="btn-secondary">Clear Form</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <h2>Installation Saved!</h2>
+            <p>Installation record has been saved successfully.</p>
+            <div class="modal-actions">
+                <button id="newInstallBtn" class="btn-primary">New Installation</button>
+                <button id="viewInstallsBtn" class="btn-secondary">View All Installations</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

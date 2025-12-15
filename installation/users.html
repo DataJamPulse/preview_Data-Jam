@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - DataJam Install Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="logo.jpg" alt="DataJam" class="logo-image">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="index.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    New Install
+                </a>
+                <a href="installations.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    View Installs
+                </a>
+                <a href="inventory.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
+                        <line x1="12" y1="11" x2="12" y2="17"/>
+                        <line x1="9" y1="14" x2="15" y2="14"/>
+                    </svg>
+                    Inventory
+                </a>
+                <a href="projects.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Projects
+                </a>
+                <a href="users.html" class="active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Users
+                </a>
+                <a href="settings.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="currentUserName">User</div>
+                        <div class="user-role" id="currentUserRole">Loading...</div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="SessionManager.logout()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div style="margin-bottom: 32px;">
+                <h1>User Management</h1>
+                <p class="subtitle">Manage user accounts and permissions</p>
+            </div>
+
+            <!-- Admin Only Notice -->
+            <div id="adminOnlyNotice" style="display: none; padding: 16px; background: rgba(230, 47, 110, 0.1); border: 1px solid var(--datajam-pink); border-radius: 8px; margin-bottom: 24px; color: var(--datajam-pink);">
+                ⚠️ Admin access required to manage users
+            </div>
+
+            <!-- Add User Section -->
+            <div class="form-section" style="margin-bottom: 40px;">
+                <h2>Add New User</h2>
+                <form id="addUserForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newUsername">Username <span class="required">*</span></label>
+                            <input type="text" id="newUsername" required placeholder="e.g., john.smith">
+                        </div>
+                        <div class="form-group">
+                            <label for="newFullName">Full Name <span class="required">*</span></label>
+                            <input type="text" id="newFullName" required placeholder="e.g., John Smith">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newPassword">Password <span class="required">*</span></label>
+                            <input type="password" id="newPassword" required placeholder="Minimum 6 characters">
+                        </div>
+                        <div class="form-group">
+                            <label for="newRole">Role <span class="required">*</span></label>
+                            <select id="newRole" required>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Add User
+                    </button>
+                </form>
+            </div>
+
+            <!-- Users List -->
+            <div>
+                <h2 style="margin-bottom: 16px;">All Users</h2>
+                <div id="usersList" class="users-list">
+                    <!-- Users will be rendered here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit User</h2>
+                <button class="modal-close" onclick="userManager.closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-group">
+                        <label for="editUsername">Username</label>
+                        <input type="text" id="editUsername" disabled style="opacity: 0.6; cursor: not-allowed;">
+                        <small style="color: var(--text-secondary); font-size: 12px;">Username cannot be changed</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="editFullName">Full Name <span class="required">*</span></label>
+                        <input type="text" id="editFullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editRole">Role <span class="required">*</span></label>
+                        <select id="editRole" required>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="userManager.closeEditModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Change Password</h2>
+                <button class="modal-close" onclick="userManager.closePasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <input type="hidden" id="passwordUserId">
+                    <div style="margin-bottom: 16px; padding: 12px; background: rgba(78, 205, 196, 0.1); border-radius: 8px; color: var(--text-secondary);">
+                        <strong id="passwordUsername" style="color: var(--text-primary);"></strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPasswordInput">New Password <span class="required">*</span></label>
+                        <input type="password" id="newPasswordInput" required placeholder="Minimum 6 characters">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPasswordInput">Confirm Password <span class="required">*</span></label>
+                        <input type="password" id="confirmPasswordInput" required placeholder="Re-enter password">
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="btn-primary">Change Password</button>
+                        <button type="button" class="btn-secondary" onclick="userManager.closePasswordModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Delete User</h2>
+                <button class="modal-close" onclick="userManager.closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="deleteUserId">
+                <p style="margin-bottom: 16px; color: var(--text-secondary);">Are you sure you want to delete this user?</p>
+                <div style="padding: 16px; background: rgba(230, 47, 110, 0.1); border-radius: 8px; margin-bottom: 24px;">
+                    <strong id="deleteUsername" style="color: var(--datajam-pink);"></strong>
+                </div>
+                <p style="color: var(--datajam-pink); font-size: 14px; margin-bottom: 24px;">⚠️ This action cannot be undone.</p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-danger" onclick="userManager.confirmDelete()">Delete User</button>
+                    <button class="btn-secondary" onclick="userManager.closeDeleteModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // User Management functionality
+        class UserManager {
+            constructor() {
+                this.currentUser = SessionManager.getSession();
+                this.users = this.loadUsers();
+                this.init();
+            }
+
+            loadUsers() {
+                try {
+                    const data = localStorage.getItem('datajam_users');
+                    return data ? JSON.parse(data) : this.initializeDefaultUsers();
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                    return this.initializeDefaultUsers();
+                }
+            }
+
+            initializeDefaultUsers() {
+                const defaultUsers = [
+                    {
+                        id: Date.now(),
+                        username: 'alex',
+                        password: 'datajam2025',
+                        fullName: 'Alex Connor',
+                        role: 'admin',
+                        createdAt: new Date().toISOString(),
+                        createdBy: 'system'
+                    }
+                ];
+                this.saveUsers(defaultUsers);
+                return defaultUsers;
+            }
+
+            saveUsers(users) {
+                try {
+                    localStorage.setItem('datajam_users', JSON.stringify(users));
+                    this.users = users;
+                } catch (error) {
+                    console.error('Error saving users:', error);
+                    alert('Error saving users. Storage may be full.');
+                }
+            }
+
+            init() {
+                // Check if user is admin
+                if (this.currentUser.role !== 'admin') {
+                    document.getElementById('adminOnlyNotice').style.display = 'block';
+                    document.getElementById('addUserForm').style.display = 'none';
+                    // Disable action buttons
+                    this.renderUsers(true); // true = read-only mode
+                    return;
+                }
+
+                this.renderUsers();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // Add user form
+                document.getElementById('addUserForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleAddUser();
+                });
+
+                // Edit user form
+                document.getElementById('editUserForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleEditUser();
+                });
+
+                // Change password form
+                document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleChangePassword();
+                });
+            }
+
+            renderUsers(readOnly = false) {
+                const container = document.getElementById('usersList');
+
+                if (this.users.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            No users found
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Sort users: current user first, then by role (admin first), then alphabetically
+                const sortedUsers = [...this.users].sort((a, b) => {
+                    if (a.username === this.currentUser.username) return -1;
+                    if (b.username === this.currentUser.username) return 1;
+                    if (a.role === 'admin' && b.role !== 'admin') return -1;
+                    if (b.role === 'admin' && a.role !== 'admin') return 1;
+                    return a.fullName.localeCompare(b.fullName);
+                });
+
+                container.innerHTML = sortedUsers.map(user => {
+                    const isCurrentUser = user.username === this.currentUser.username;
+                    const createdDate = new Date(user.createdAt).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+
+                    return `
+                        <div class="user-card">
+                            <div class="user-card-header">
+                                <div class="user-card-avatar">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                                <div class="user-card-info">
+                                    <div class="user-card-name">
+                                        ${this.escapeHtml(user.fullName)}
+                                        ${isCurrentUser ? '<span class="user-badge-you">You</span>' : ''}
+                                    </div>
+                                    <div class="user-card-username">@${this.escapeHtml(user.username)}</div>
+                                </div>
+                                <div class="user-card-role">
+                                    <span class="role-badge role-${user.role}">${user.role}</span>
+                                </div>
+                            </div>
+                            <div class="user-card-meta">
+                                <span>Created ${createdDate}</span>
+                                ${user.createdBy ? `<span>by ${this.escapeHtml(user.createdBy)}</span>` : ''}
+                            </div>
+                            ${!readOnly ? `
+                                <div class="user-card-actions">
+                                    <button class="btn-secondary btn-sm" onclick="userManager.openEditModal('${user.id}')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    <button class="btn-secondary btn-sm" onclick="userManager.openPasswordModal('${user.id}')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                        </svg>
+                                        Change Password
+                                    </button>
+                                    ${!isCurrentUser ? `
+                                        <button class="btn-danger btn-sm" onclick="userManager.openDeleteModal('${user.id}')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="3 6 5 6 21 6"/>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            handleAddUser() {
+                const username = document.getElementById('newUsername').value.trim().toLowerCase();
+                const fullName = document.getElementById('newFullName').value.trim();
+                const password = document.getElementById('newPassword').value;
+                const role = document.getElementById('newRole').value;
+
+                // Validation
+                if (username.length < 3) {
+                    alert('Username must be at least 3 characters long');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    alert('Password must be at least 6 characters long');
+                    return;
+                }
+
+                // Check if username already exists
+                if (this.users.find(u => u.username === username)) {
+                    alert('Username already exists. Please choose a different username.');
+                    return;
+                }
+
+                // Create new user
+                const newUser = {
+                    id: Date.now(),
+                    username,
+                    password,
+                    fullName,
+                    role,
+                    createdAt: new Date().toISOString(),
+                    createdBy: this.currentUser.username
+                };
+
+                this.users.push(newUser);
+                this.saveUsers(this.users);
+                this.renderUsers();
+
+                // Reset form
+                document.getElementById('addUserForm').reset();
+
+                alert(`User "${fullName}" created successfully!`);
+            }
+
+            openEditModal(userId) {
+                const user = this.users.find(u => u.id === parseInt(userId));
+                if (!user) return;
+
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editUsername').value = user.username;
+                document.getElementById('editFullName').value = user.fullName;
+                document.getElementById('editRole').value = user.role;
+
+                document.getElementById('editUserModal').style.display = 'flex';
+            }
+
+            closeEditModal() {
+                document.getElementById('editUserModal').style.display = 'none';
+                document.getElementById('editUserForm').reset();
+            }
+
+            handleEditUser() {
+                const userId = parseInt(document.getElementById('editUserId').value);
+                const fullName = document.getElementById('editFullName').value.trim();
+                const role = document.getElementById('editRole').value;
+
+                const userIndex = this.users.findIndex(u => u.id === userId);
+                if (userIndex === -1) return;
+
+                // Don't allow changing your own role
+                if (this.users[userIndex].username === this.currentUser.username && role !== this.currentUser.role) {
+                    alert('You cannot change your own role');
+                    return;
+                }
+
+                this.users[userIndex].fullName = fullName;
+                this.users[userIndex].role = role;
+
+                this.saveUsers(this.users);
+                this.renderUsers();
+                this.closeEditModal();
+
+                alert('User updated successfully!');
+            }
+
+            openPasswordModal(userId) {
+                const user = this.users.find(u => u.id === parseInt(userId));
+                if (!user) return;
+
+                document.getElementById('passwordUserId').value = user.id;
+                document.getElementById('passwordUsername').textContent = `Change password for: ${user.fullName} (@${user.username})`;
+
+                document.getElementById('changePasswordModal').style.display = 'flex';
+            }
+
+            closePasswordModal() {
+                document.getElementById('changePasswordModal').style.display = 'none';
+                document.getElementById('changePasswordForm').reset();
+            }
+
+            handleChangePassword() {
+                const userId = parseInt(document.getElementById('passwordUserId').value);
+                const newPassword = document.getElementById('newPasswordInput').value;
+                const confirmPassword = document.getElementById('confirmPasswordInput').value;
+
+                if (newPassword.length < 6) {
+                    alert('Password must be at least 6 characters long');
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                }
+
+                const userIndex = this.users.findIndex(u => u.id === userId);
+                if (userIndex === -1) return;
+
+                this.users[userIndex].password = newPassword;
+
+                this.saveUsers(this.users);
+                this.closePasswordModal();
+
+                alert('Password changed successfully!');
+            }
+
+            openDeleteModal(userId) {
+                const user = this.users.find(u => u.id === parseInt(userId));
+                if (!user) return;
+
+                // Don't allow deleting yourself
+                if (user.username === this.currentUser.username) {
+                    alert('You cannot delete your own account');
+                    return;
+                }
+
+                document.getElementById('deleteUserId').value = user.id;
+                document.getElementById('deleteUsername').textContent = `${user.fullName} (@${user.username})`;
+
+                document.getElementById('deleteUserModal').style.display = 'flex';
+            }
+
+            closeDeleteModal() {
+                document.getElementById('deleteUserModal').style.display = 'none';
+            }
+
+            confirmDelete() {
+                const userId = parseInt(document.getElementById('deleteUserId').value);
+                const user = this.users.find(u => u.id === userId);
+
+                if (!user) return;
+
+                this.users = this.users.filter(u => u.id !== userId);
+                this.saveUsers(this.users);
+                this.renderUsers();
+                this.closeDeleteModal();
+
+                alert(`User "${user.fullName}" deleted successfully`);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize user manager
+        const userManager = new UserManager();
+
+        // Populate user info in sidebar
+        document.addEventListener('DOMContentLoaded', () => {
+            const userNameEl = document.getElementById('currentUserName');
+            const userRoleEl = document.getElementById('currentUserRole');
+
+            if (userNameEl && SessionManager) {
+                userNameEl.textContent = SessionManager.getCurrentUser();
+            }
+            if (userRoleEl && SessionManager) {
+                const role = SessionManager.getUserRole() || 'user';
+                userRoleEl.textContent = role;
+            }
+        });
+    </script>
+</body>
+</html>

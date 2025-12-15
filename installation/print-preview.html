@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation Report - DataJam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Print Preview Specific Styles */
+        .print-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+        }
+
+        .print-header {
+            text-align: center;
+            border-bottom: 3px solid var(--datajam-pink);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .print-header h1 {
+            color: var(--datajam-pink);
+            margin: 0 0 10px 0;
+            font-size: 32px;
+        }
+
+        .print-header .venue-name {
+            font-size: 24px;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .print-section {
+            margin-bottom: 30px;
+            break-inside: avoid;
+        }
+
+        .print-section h2 {
+            color: var(--datajam-orange);
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .print-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .print-field {
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+
+        .print-field label {
+            display: block;
+            font-weight: 500;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .print-field value {
+            display: block;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .print-photos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .print-photo {
+            break-inside: avoid;
+        }
+
+        .print-photo img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .print-actions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .print-actions button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-family: var(--font-body);
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%);
+            color: white;
+        }
+
+        .btn-back {
+            background: #666;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+
+        @media print {
+            .print-actions {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+
+            .print-container {
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .print-section {
+                page-break-inside: avoid;
+            }
+
+            .print-photo {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body style="background: #f5f5f5;">
+    <div class="print-actions">
+        <button class="btn-print" onclick="window.print()">🖨️ Print Report</button>
+        <button class="btn-back" onclick="window.close()">← Back</button>
+    </div>
+
+    <div class="print-container" id="printContent">
+        <!-- Content will be loaded here by JavaScript -->
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Load installation data from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const installId = urlParams.get('id');
+
+        if (!installId) {
+            document.getElementById('printContent').innerHTML = '<p style="text-align: center; padding: 40px; color: #666;">No installation ID provided</p>';
+        } else {
+            loadInstallationReport(installId);
+        }
+
+        async function loadInstallationReport(id) {
+            const installations = JSON.parse(localStorage.getItem('datajam_installations') || '[]');
+            const install = installations.find(i => i.id == id);
+
+            if (!install) {
+                document.getElementById('printContent').innerHTML = '<p style="text-align: center; padding: 40px; color: #666;">Installation not found</p>';
+                return;
+            }
+
+            // Decrypt WiFi password if encrypted
+            let wifiPassword = install.password || '';
+            if (wifiPassword && typeof EncryptionUtil !== 'undefined') {
+                wifiPassword = await EncryptionUtil.decrypt(wifiPassword);
+            }
+
+            // Status badge styling
+            const statusColors = {
+                'scheduled': '#3B82F6',
+                'in-progress': '#F59E0B',
+                'completed': '#14B8A6',
+                'issue': '#E62F6E'
+            };
+            const statusLabels = {
+                'scheduled': 'Scheduled',
+                'in-progress': 'In Progress',
+                'completed': 'Completed',
+                'issue': 'Issue/Problem'
+            };
+            const status = install.status || 'completed';
+            const statusColor = statusColors[status] || '#666';
+            const statusLabel = statusLabels[status] || status;
+
+            const html = `
+                <div class="print-header">
+                    <h1>Installation Report</h1>
+                    <div class="venue-name">${escapeHtml(install.clientName || 'N/A')}</div>
+                    <div class="status-badge" style="background: ${statusColor}; color: white;">
+                        ${statusLabel}
+                    </div>
+                    <div style="color: #666; font-size: 14px; margin-top: 10px;">
+                        Generated: ${new Date().toLocaleString('en-GB')}
+                    </div>
+                </div>
+
+                <div class="print-section">
+                    <h2>General Information</h2>
+                    <div class="print-grid">
+                        <div class="print-field">
+                            <label>Installation Date</label>
+                            <value>${install.installDate || 'N/A'} ${install.installTime || ''}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>Project</label>
+                            <value>${escapeHtml(install.projectName || 'N/A')}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>Venue Name</label>
+                            <value>${escapeHtml(install.clientName || 'N/A')}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>Location Type</label>
+                            <value>${escapeHtml(install.locationType || 'N/A')}</value>
+                        </div>
+                    </div>
+                    <div class="print-field" style="grid-column: span 2;">
+                        <label>Address</label>
+                        <value>${escapeHtml(install.installAddress || 'N/A').replace(/\n/g, '<br>')}</value>
+                    </div>
+                </div>
+
+                <div class="print-section">
+                    <h2>JamBox Device Information</h2>
+                    <div class="print-grid">
+                        <div class="print-field">
+                            <label>JamBox ID</label>
+                            <value>${escapeHtml(install.jamboxId || 'N/A')}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>IP Address</label>
+                            <value>${escapeHtml(install.ipAddress || 'N/A')}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>Device Tested</label>
+                            <value>${install.deviceTested ? '✅ Yes' : '❌ No'}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>Network Verified</label>
+                            <value>${install.networkVerified ? '✅ Yes' : '❌ No'}</value>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="print-section">
+                    <h2>Network Configuration</h2>
+                    <div class="print-grid">
+                        <div class="print-field">
+                            <label>WiFi SSID</label>
+                            <value>${escapeHtml(install.ssid || 'N/A')}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>WiFi Password</label>
+                            <value>${escapeHtml(wifiPassword || 'N/A')}</value>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="print-section">
+                    <h2>Contact Information</h2>
+                    <div class="print-grid">
+                        <div class="print-field">
+                            <label>Contact Person</label>
+                            <value>${escapeHtml(install.clientContact || 'N/A')}</value>
+                        </div>
+                        <div class="print-field">
+                            <label>Email</label>
+                            <value>${escapeHtml(install.clientEmail || 'N/A')}</value>
+                        </div>
+                        <div class="print-field" style="grid-column: span 2;">
+                            <label>Phone</label>
+                            <value>${escapeHtml(install.clientPhone || 'N/A')}</value>
+                        </div>
+                    </div>
+                </div>
+
+                ${install.notes ? `
+                <div class="print-section">
+                    <h2>Installation Notes</h2>
+                    <div class="print-field">
+                        <value>${escapeHtml(install.notes).replace(/\n/g, '<br>')}</value>
+                    </div>
+                </div>
+                ` : ''}
+
+                ${install.photos && install.photos.length > 0 ? `
+                <div class="print-section">
+                    <h2>Installation Photos</h2>
+                    <div class="print-photos">
+                        ${install.photos.map((photo, idx) => `
+                            <div class="print-photo">
+                                <img src="${photo.data}" alt="Installation Photo ${idx + 1}">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #f0f0f0; color: #666; font-size: 12px;">
+                    <p>This report was generated by the DataJam Installation Tracker</p>
+                    <p>Report ID: ${install.id}</p>
+                </div>
+            `;
+
+            document.getElementById('printContent').innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Directory - DataJam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="logo.jpg" alt="DataJam" class="logo-image">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    New Install
+                </a>
+                <a href="installations.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    View Installs
+                </a>
+                <a href="projects.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Projects
+                </a>
+                <a href="customer-directory.html" class="active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Customer Directory
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1>Customer Directory</h1>
+                    <p class="subtitle">View all customers and their installation sites</p>
+                </div>
+            </div>
+
+            <div id="customerGrid" class="customer-grid">
+                <!-- Customers will be rendered here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Customer Directory Manager
+        class CustomerDirectoryManager {
+            constructor() {
+                this.installations = this.loadInstallations();
+                this.customers = this.buildCustomerDirectory();
+                this.init();
+            }
+
+            init() {
+                this.renderCustomers();
+            }
+
+            loadInstallations() {
+                const stored = StorageUtil.safeGet('datajam_installations');
+                return StorageUtil.safeParse(stored, []);
+            }
+
+            buildCustomerDirectory() {
+                const customerMap = new Map();
+
+                this.installations.forEach(install => {
+                    const clientName = install.clientName;
+
+                    if (!customerMap.has(clientName)) {
+                        customerMap.set(clientName, {
+                            name: clientName,
+                            contact: install.clientContact || '',
+                            email: install.clientEmail || '',
+                            phone: install.clientPhone || '',
+                            projects: new Set(),
+                            locations: [],
+                            totalInstallations: 0,
+                            lastInstallDate: install.installDate
+                        });
+                    }
+
+                    const customer = customerMap.get(clientName);
+                    customer.totalInstallations++;
+
+                    if (install.projectName) {
+                        customer.projects.add(install.projectName);
+                    }
+
+                    customer.locations.push({
+                        address: install.installAddress,
+                        type: install.locationType,
+                        jamboxId: install.jamboxId,
+                        date: install.installDate,
+                        installId: install.id
+                    });
+
+                    // Update contact info if missing and current install has it
+                    if (!customer.contact && install.clientContact) customer.contact = install.clientContact;
+                    if (!customer.email && install.clientEmail) customer.email = install.clientEmail;
+                    if (!customer.phone && install.clientPhone) customer.phone = install.clientPhone;
+
+                    // Keep track of most recent install
+                    if (install.installDate > customer.lastInstallDate) {
+                        customer.lastInstallDate = install.installDate;
+                    }
+                });
+
+                return Array.from(customerMap.values()).sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                );
+            }
+
+            renderCustomers() {
+                const grid = document.getElementById('customerGrid');
+                if (!grid) return;
+
+                if (this.customers.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <h2>No Customers Yet</h2>
+                            <p>Create your first installation to see customers appear here.</p>
+                            <a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 20px; text-decoration: none;">New Installation</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = this.customers.map(customer => this.renderCustomerCard(customer)).join('');
+            }
+
+            renderCustomerCard(customer) {
+                const projectsList = Array.from(customer.projects).join(', ') || 'No project assigned';
+                const lastInstall = new Date(customer.lastInstallDate).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                return `
+                    <div class="customer-card">
+                        <div class="customer-card-header">
+                            <div>
+                                <h3>${customer.name}</h3>
+                                <p class="customer-meta">${customer.totalInstallations} installation${customer.totalInstallations !== 1 ? 's' : ''}</p>
+                            </div>
+                        </div>
+                        <div class="customer-card-body">
+                            <div class="customer-info">
+                                <strong>Projects:</strong> ${projectsList}
+                            </div>
+                            ${customer.contact ? `<div class="customer-info"><strong>Contact:</strong> ${customer.contact}</div>` : ''}
+                            ${customer.email ? `<div class="customer-info"><strong>Email:</strong> ${customer.email}</div>` : ''}
+                            ${customer.phone ? `<div class="customer-info"><strong>Phone:</strong> ${customer.phone}</div>` : ''}
+                            <div class="customer-info">
+                                <strong>Last Install:</strong> ${lastInstall}
+                            </div>
+                        </div>
+                        <div class="customer-card-actions">
+                            <button class="btn-small btn-view" onclick="customerManager.viewCustomerDetails('${customer.name.replace(/'/g, "\\'")}')">View Locations</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            viewCustomerDetails(customerName) {
+                const customer = this.customers.find(c => c.name === customerName);
+                if (!customer) return;
+
+                const locationsList = customer.locations.map(loc => {
+                    const date = new Date(loc.date).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+
+                    return `
+                        <div class="location-item">
+                            <div class="location-header">
+                                <span class="location-type-badge">${loc.type}</span>
+                                <span class="location-date">${date}</span>
+                            </div>
+                            <div class="location-address">${loc.address}</div>
+                            ${loc.jamboxId ? `<div class="location-jambox">JamBox ID: ${loc.jamboxId}</div>` : ''}
+                            <button class="btn-small btn-view" onclick="window.location.href='installations.html'" style="margin-top: 8px;">View in Installations</button>
+                        </div>
+                    `;
+                }).join('');
+
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                        <h2>${customer.name}</h2>
+                        <div style="text-align: left; margin-top: 24px; color: var(--text-secondary);">
+                            <div style="display: grid; gap: 16px;">
+                                <div><strong style="color: var(--text-primary);">Total Installations:</strong> ${customer.totalInstallations}</div>
+                                <div><strong style="color: var(--text-primary);">Projects:</strong> ${Array.from(customer.projects).join(', ') || 'None'}</div>
+                                ${customer.contact ? `<div><strong style="color: var(--text-primary);">Contact:</strong> ${customer.contact}</div>` : ''}
+                                ${customer.email ? `<div><strong style="color: var(--text-primary);">Email:</strong> ${customer.email}</div>` : ''}
+                                ${customer.phone ? `<div><strong style="color: var(--text-primary);">Phone:</strong> ${customer.phone}</div>` : ''}
+
+                                <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
+                                    <h3 style="color: var(--datajam-pink); margin-bottom: 16px;">Installation Locations (${customer.locations.length})</h3>
+                                    <div style="display: grid; gap: 16px;">
+                                        ${locationsList}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions" style="margin-top: 32px;">
+                            <button class="btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+            }
+        }
+
+        // Initialize on page load
+        let customerManager;
+        document.addEventListener('DOMContentLoaded', () => {
+            customerManager = new CustomerDirectoryManager();
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>

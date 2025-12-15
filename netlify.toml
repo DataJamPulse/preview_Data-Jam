@@ -23,7 +23,7 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
 
     # Content Security Policy
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self'; connect-src 'self' https://ysavdqiiilslrigtpacu.supabase.co https://www.google-analytics.com https://analytics.google.com; frame-ancestors 'none'; form-action 'self' https://api.netlify.com;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self'; connect-src 'self' https://ysavdqiiilslrigtpacu.supabase.co https://www.google-analytics.com https://analytics.google.com https://api.cloudinary.com https://*.cloudinary.com; frame-ancestors 'none'; form-action 'self' https://api.netlify.com;"
 
 # Cache static assets
 [[headers]]
@@ -70,4 +70,9 @@
 [[redirects]]
   from = "/contact"
   to = "/contact.html"
+  status = 200
+
+[[redirects]]
+  from = "/installation"
+  to = "/installation/login.html"
   status = 200
