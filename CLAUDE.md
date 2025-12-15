@@ -123,7 +123,7 @@ Site includes Schema.org structured data and custom meta tags for AI discoverabi
 
 ### Flow
 ```
-Contact Form → Supabase (website_leads) → Email Notification → HubSpot (via legacy sync)
+Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSpot
 ```
 
 ### Supabase
@@ -135,14 +135,22 @@ Contact Form → Supabase (website_leads) → Email Notification → HubSpot (vi
 
 ### Email Notifications
 - **Service:** Resend (resend.com)
-- **Domain:** data-jam.com (verified)
+- **From:** leads@data-jam.com (avoids spam filters vs hello@)
+- **Domain:** data-jam.com (verified with DKIM)
 - **Recipients:** arran@data-jam.com, rhea@data-jam.com
 - **Function:** `/netlify/functions/notify-lead.js`
 
-### HubSpot Integration
-- Connected via legacy app that syncs from Supabase
-- Leads go to "Website Leads" in HubSpot (unqualified)
-- Qualified manually before converting to opportunity
+### HubSpot Integration (Direct API)
+- **Method:** Direct API push via Netlify function (not legacy sync)
+- **API Key:** Private App token in Netlify env vars
+- **Creates/updates:** Contact with name, email, company, lifecycle stage
+- **Custom property:** `marketing_opt_in` (Yes/No) - tracks consent
+- Leads appear immediately in HubSpot after form submission
+
+### Marketing Opt-in
+- Checkbox on contact form (pre-checked by default)
+- Captured in: Supabase, email notification, HubSpot
+- HubSpot property: `marketing_opt_in` (custom, single checkbox)
 
 ## Installer Portal
 
@@ -156,6 +164,7 @@ Contact Form → Supabase (website_leads) → Email Notification → HubSpot (vi
 ## Environment Variables (Netlify)
 ```
 RESEND_API_KEY=re_xxxxx (for email notifications)
+HUBSPOT_API_KEY=pat-xxxxx (Private App token for CRM integration)
 ```
 
 ## Security Headers (netlify.toml)
@@ -165,7 +174,25 @@ RESEND_API_KEY=re_xxxxx (for email notifications)
 - XSS Protection enabled
 - Referrer-Policy: strict-origin-when-cross-origin
 
+## Security Hardening (Dec 2024)
+
+### Form Security
+- **HTML sanitization:** All user inputs escaped before email rendering
+- **Input length limits:** Name/company (100), email (254), message (2000)
+- **Bot protection:** Forms submitted in <3 seconds silently rejected
+- **Honeypot field:** Hidden field catches basic bots
+- **Server-side validation:** Netlify function enforces limits as backup
+
+### API Security
+- Supabase anon key is public (by design) - RLS restricts to INSERT only
+- Resend/HubSpot keys stored in Netlify environment variables (never client-side)
+- No debug logging in production functions
+
 ## Recent Updates (Dec 2024)
+- **HubSpot direct integration** - leads push to CRM immediately via API
+- **Marketing opt-in checkbox** - pre-checked, captured in email + HubSpot
+- **Security hardening** - HTML sanitization, input limits, bot protection
+- **Email sender changed** - now from leads@data-jam.com (better deliverability)
 - Splash screen changed to once-per-session (was every visit)
 - Installer Login link added to footer on all pages
 - Installer placeholder page created (/installation.html)
