@@ -42,16 +42,18 @@
         document.body.appendChild(overlay);
 
         toggle.addEventListener('click', () => {
+            const isOpen = navMenu.classList.toggle('active');
             toggle.classList.toggle('active');
-            navMenu.classList.toggle('active');
             overlay.classList.toggle('active');
-            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+            toggle.setAttribute('aria-expanded', isOpen);
+            document.body.style.overflow = isOpen ? 'hidden' : '';
         });
 
         overlay.addEventListener('click', () => {
             toggle.classList.remove('active');
             navMenu.classList.remove('active');
             overlay.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
             document.body.style.overflow = '';
         });
 
