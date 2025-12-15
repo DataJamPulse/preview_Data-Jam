@@ -3,8 +3,13 @@
 // ========================================
 const SessionManager = {
     getSession() {
-        const data = localStorage.getItem('datajam_session');
-        return data ? JSON.parse(data) : null;
+        try {
+            const data = localStorage.getItem('datajam_session');
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.error('[Session] Error parsing session:', e);
+            return null;
+        }
     },
 
     isAuthenticated() {
