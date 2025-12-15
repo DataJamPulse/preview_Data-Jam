@@ -188,6 +188,17 @@ User Login → Extract email from auth
 - DataJam team (@data-jam.com) auto-granted installer access
 - Rate limiting: 5 failed attempts = 15 minute lockout
 
+**Project-Based Access Control (Dec 2025):**
+- Users only see projects they have access to (from DataJam Portal API)
+- On login, authorized projects stored in session (`session.projects`)
+- Project dropdown on new install form shows only authorized projects
+- Projects page filters to only show authorized projects
+- Installations view filters to only show installations for authorized projects
+- Shipment destination dropdown uses authorized projects
+- All dropdowns have "Other (Manual Entry)" fallback for flexibility
+- SessionManager methods: `getProjects()`, `getProjectNames()`, `hasProjectAccess()`
+- If no authorized projects in session, all projects shown (backwards compatibility)
+
 **Technical:**
 - Auth function: `/netlify/functions/installer-auth.js` v2.0.0
 - Pulse Reports endpoint: `GET /user-management-api/installer-check/:email`
@@ -242,7 +253,15 @@ HUBSPOT_API_KEY=pat-xxxxx (Private App token for CRM integration)
 - Resend/HubSpot keys stored in Netlify environment variables (never client-side)
 - No debug logging in production functions
 
-## Recent Updates (Dec 2024)
+## Recent Updates (Dec 2024 - Dec 2025)
+
+### Dec 2025
+- **Installer Portal - Project Access Control** - users only see projects they're authorized for
+- **Two-gate installer auth** - Pulse Reports access check → DataJam Portal validation
+- **Installer nav link** - "Installer" added to main site navigation on all pages
+- **CSP updates** - added cdnjs.cloudflare.com for html2pdf source maps
+
+### Dec 2024
 - **HubSpot direct integration** - leads push to CRM immediately via API
 - **Marketing opt-in checkbox** - pre-checked, captured in email + HubSpot
 - **Security hardening** - HTML sanitization, input limits, bot protection
