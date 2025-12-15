@@ -11,7 +11,7 @@
 
 ## Recent Updates
 
-**2025-12-15 - DataJam Portal Authentication:**
+**2025-12-15 - DataJam Portal Authentication & UI Fixes:**
 - ✅ **LOGIN NOW USES DATAJAM PORTAL CREDENTIALS**
   - No more separate installer account - use your DataJam Portal login
   - Same username/password as datajamreports.com
@@ -24,6 +24,12 @@
   - Floating particles animation on login page
   - Noise texture overlay for premium feel
   - Enhanced button hover effects with glow
+- ✅ **UI CONSISTENCY FIXES**
+  - Added sidebar-footer with user profile to ALL pages
+  - User name and role now displayed in sidebar on every page
+  - Logout button available from any page
+  - Fixed session error handling (try-catch in getSession)
+  - Disabled Supabase realtime subscriptions (not needed, was causing WebSocket errors)
 
 **2025-12-12 - Multi-User System, Enhancements & Project Tracking (Session 3):**
 - ✅ **MULTI-USER LOGIN SYSTEM** - Complete authentication

@@ -156,6 +156,7 @@ Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSp
 ## Installer Portal (Dec 2024)
 
 - **URL:** https://preview.data-jam.com/installation
+- **Nav Link:** "Installer" added to main site navigation (JamBox | About | Blog | Contact | **Installer**)
 - **Purpose:** Internal tool for Alex to track JamBox sensor installations
 - **Login:** DataJam Portal API authentication (same credentials as datajamreports.com)
 - **Auth Function:** `/netlify/functions/installer-auth.js` - validates against datajamportal.com
@@ -165,6 +166,7 @@ Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSp
 - **Offline:** Sync queue for offline operation (Alex works in basements with poor signal)
 - **Note:** Page has `noindex` meta tag - not for public/SEO
 - **Design:** Premium dark theme with Abeat font, floating particles, noise texture
+- **UI:** Consistent sidebar on all pages with user profile display and logout button
 
 ### Installer Authentication
 - Uses DataJam Portal API (`datajamportal.com/CustomerAPI/GetUserProjects/`)
