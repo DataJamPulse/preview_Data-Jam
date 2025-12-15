@@ -168,12 +168,30 @@ Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSp
 - **Design:** Premium dark theme with Abeat font, floating particles, noise texture
 - **UI:** Consistent sidebar on all pages with user profile display and logout button
 
-### Installer Authentication
-- Uses DataJam Portal API (`datajamportal.com/CustomerAPI/GetUserProjects/`)
-- Same login credentials as DataJam Reports portal
-- Base64 Basic Auth via Netlify function (avoids CORS/SSL issues)
+### Installer Authentication (v2.0.0 - Dec 2025)
+**Two-gate authentication system:**
+1. **Gate 1 (Pulse Reports):** Checks `installer_access` flag via datajamreports.com API
+2. **Gate 2 (DataJam Portal):** Validates credentials against datajamportal.com
+
+**Flow:**
+```
+User Login → Extract email from auth
+           → Call Pulse Reports /installer-check/:email
+           → If hasAccess=false → DENY (never calls DataJam API)
+           → If hasAccess=true → Validate credentials against DataJam Portal
+           → Return success/failure
+```
+
+**Access Control:**
+- Managed via Pulse Reports Admin Panel (datajamreports.com)
+- Admin Panel → Users → Edit User → "Installer Portal Access" checkbox
+- DataJam team (@data-jam.com) auto-granted installer access
 - Rate limiting: 5 failed attempts = 15 minute lockout
-- Any valid Portal user can access (no whitelist currently)
+
+**Technical:**
+- Auth function: `/netlify/functions/installer-auth.js` v2.0.0
+- Pulse Reports endpoint: `GET /user-management-api/installer-check/:email`
+- Fails secure: If Pulse Reports is down, access is denied
 
 ### Installer Database Schema
 ```

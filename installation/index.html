@@ -448,8 +448,11 @@
     <script src="supabase-client.js"></script>
     <script src="app.js"></script>
     <script>
+        console.log('[INDEX] Page loaded');
+
         // Populate user info in sidebar
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('[INDEX] DOMContentLoaded fired');
             const userNameEl = document.getElementById('currentUserName');
             const userRoleEl = document.getElementById('currentUserRole');
 
