@@ -27,8 +27,8 @@ class SupabaseClient {
     // Load sync queue from IndexedDB
     await this.loadSyncQueue();
 
-    // Subscribe to realtime updates
-    this.setupRealtimeSubscriptions();
+    // Realtime subscriptions disabled - not needed for installer app
+    // this.setupRealtimeSubscriptions();
 
     this.initialized = true;
     console.log('[Supabase] Client initialized');
