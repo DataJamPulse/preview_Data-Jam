@@ -8,9 +8,8 @@ const CONFIG = {
   SUPABASE_URL: 'https://ysavdqiiilslrigtpacu.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzYXZkcWlpaWxzbHJpZ3RwYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUzNzgyNTgsImV4cCI6MjA0MDk1NDI1OH0.4PK1M4kCgAdT4DLMN6UIbI5OR5HFMwQQJN1XBXKL1eE',
 
-  // Cloudinary Configuration (user needs to fill these in)
-  CLOUDINARY_CLOUD_NAME: '', // e.g., 'dxxxxx'
-  CLOUDINARY_UPLOAD_PRESET: 'datajam_installer', // unsigned preset name
+  // Storage bucket name (created in Supabase dashboard)
+  STORAGE_BUCKET: 'installer-photos',
 
   // App Settings
   APP_NAME: 'DataJam Installer',
@@ -22,6 +21,8 @@ const CONFIG = {
   // Photo settings
   MAX_PHOTO_SIZE_MB: 5,
   PHOTO_QUALITY: 0.8,
+  MAX_PHOTO_WIDTH: 1920,
+  MAX_PHOTO_HEIGHT: 1920,
 
   // Offline settings
   SYNC_INTERVAL_MS: 30000, // Try to sync every 30 seconds when online

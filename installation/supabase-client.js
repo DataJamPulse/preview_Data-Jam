@@ -589,48 +589,107 @@ class SupabaseClient {
 }
 
 // ========================================
-// CLOUDINARY UPLOAD
+// SUPABASE STORAGE UPLOAD
 // ========================================
 
-class CloudinaryUploader {
+class PhotoUploader {
   constructor() {
-    this.cloudName = CONFIG.CLOUDINARY_CLOUD_NAME;
-    this.uploadPreset = CONFIG.CLOUDINARY_UPLOAD_PRESET;
+    this.bucket = CONFIG.STORAGE_BUCKET;
+    this.maxWidth = CONFIG.MAX_PHOTO_WIDTH || 1920;
+    this.maxHeight = CONFIG.MAX_PHOTO_HEIGHT || 1920;
+    this.quality = CONFIG.PHOTO_QUALITY || 0.8;
   }
 
-  async uploadPhoto(file) {
-    if (!this.cloudName || !this.uploadPreset) {
-      console.warn('[Cloudinary] Not configured - storing locally');
-      return this.storeLocally(file);
-    }
-
+  async uploadPhoto(file, installationId = 'temp') {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', this.uploadPreset);
-      formData.append('folder', 'datajam-installations');
+      // Compress the image first
+      const compressedFile = await this.compressImage(file);
 
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
-        { method: 'POST', body: formData }
-      );
+      // Generate unique filename
+      const timestamp = Date.now();
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `${installationId}/${timestamp}.${ext}`;
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
+      // Upload to Supabase Storage
+      const { data, error } = await db.client.storage
+        .from(this.bucket)
+        .upload(fileName, compressedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('[Storage] Upload error:', error);
+        // Fallback to base64 for offline
+        return this.storeLocally(file);
       }
 
-      const data = await response.json();
+      // Get public URL
+      const { data: urlData } = db.client.storage
+        .from(this.bucket)
+        .getPublicUrl(fileName);
+
       return {
-        url: data.secure_url,
-        publicId: data.public_id,
-        width: data.width,
-        height: data.height
+        url: urlData.publicUrl,
+        path: fileName,
+        isLocal: false
       };
     } catch (err) {
-      console.error('[Cloudinary] Upload error:', err);
-      // Fallback to local storage
+      console.error('[Storage] Upload error:', err);
       return this.storeLocally(file);
     }
+  }
+
+  async compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const img = new Image();
+
+        img.onload = () => {
+          // Calculate new dimensions
+          let width = img.width;
+          let height = img.height;
+
+          if (width > this.maxWidth) {
+            height = (height * this.maxWidth) / width;
+            width = this.maxWidth;
+          }
+          if (height > this.maxHeight) {
+            width = (width * this.maxHeight) / height;
+            height = this.maxHeight;
+          }
+
+          // Create canvas and draw resized image
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to blob
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+              } else {
+                resolve(file); // Fallback to original
+              }
+            },
+            'image/jpeg',
+            this.quality
+          );
+        };
+
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
   }
 
   async storeLocally(file) {
@@ -647,13 +706,27 @@ class CloudinaryUploader {
     });
   }
 
-  async uploadMultiple(files) {
+  async uploadMultiple(files, installationId = 'temp') {
     const results = [];
     for (const file of files) {
-      const result = await this.uploadPhoto(file);
+      const result = await this.uploadPhoto(file, installationId);
       results.push(result);
     }
     return results;
+  }
+
+  async deletePhoto(path) {
+    try {
+      const { error } = await db.client.storage
+        .from(this.bucket)
+        .remove([path]);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('[Storage] Delete error:', err);
+      return { success: false, error: err.message };
+    }
   }
 }
 
@@ -662,7 +735,7 @@ class CloudinaryUploader {
 // ========================================
 
 const db = new SupabaseClient();
-const photoUploader = new CloudinaryUploader();
+const photoUploader = new PhotoUploader();
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
