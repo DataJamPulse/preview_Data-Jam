@@ -103,22 +103,23 @@
                     <h3>Send Us a Message</h3>
                     <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="contact-form" action="/contact-success.html">
                         <input type="hidden" name="form-name" value="contact">
+                        <input type="hidden" id="form-timestamp" name="form-timestamp" value="">
                         <p class="hidden" style="display:none;">
                             <label>Don't fill this out if you're human: <input name="bot-field" /></label>
                         </p>
                         <div class="form-group">
                             <label for="name">Name</label>
-                            <input type="text" id="name" name="name" required placeholder="Your name">
+                            <input type="text" id="name" name="name" required placeholder="Your name" maxlength="100">
                         </div>
 
                         <div class="form-group">
                             <label for="email">Email</label>
-                            <input type="email" id="email" name="email" required placeholder="your@email.com">
+                            <input type="email" id="email" name="email" required placeholder="your@email.com" maxlength="254">
                         </div>
 
                         <div class="form-group">
                             <label for="company">Company</label>
-                            <input type="text" id="company" name="company" placeholder="Your company">
+                            <input type="text" id="company" name="company" placeholder="Your company" maxlength="100">
                         </div>
 
                         <div class="form-group">
@@ -147,7 +148,14 @@
 
                         <div class="form-group">
                             <label for="message">Message</label>
-                            <textarea id="message" name="message" placeholder="Tell us about your OOH measurement needs..."></textarea>
+                            <textarea id="message" name="message" placeholder="Tell us about your OOH measurement needs..." maxlength="2000"></textarea>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="marketing-optin" name="marketing-optin" checked>
+                                <span>Keep me updated with news and insights from Data Jam</span>
+                            </label>
                         </div>
 
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
@@ -241,12 +249,26 @@
         // Supabase config
         const SUPABASE_URL = 'https://ysavdqiiilslrigtpacu.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzYXZkcWlpaWxzbHJpZ3RwYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTU0NTYsImV4cCI6MjA4MDg5MTQ1Nn0.DrsEv_e_7M8qL1PmGpTMluGtV8C1qRfzLccK6y3L9RI';
+        const MIN_SUBMIT_TIME = 3000; // Minimum 3 seconds to fill form (bot protection)
 
         const form = document.getElementById('contact-form');
         if (!form) return;
 
+        // Set timestamp when form loads (for bot detection)
+        const pageLoadTime = Date.now();
+        const timestampField = document.getElementById('form-timestamp');
+        if (timestampField) timestampField.value = pageLoadTime;
+
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            // Bot check: form submitted too quickly
+            const timeTaken = Date.now() - pageLoadTime;
+            if (timeTaken < MIN_SUBMIT_TIME) {
+                // Likely a bot - silently redirect to success (don't reveal detection)
+                window.location.href = '/contact-success.html';
+                return;
+            }
 
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
@@ -263,6 +285,7 @@
                 type: form.querySelector('#type').value || null,
                 interest: form.querySelector('#interest').value || null,
                 message: form.querySelector('#message').value.trim() || null,
+                marketing_optin: form.querySelector('#marketing-optin').checked,
                 source: 'website',
                 page_url: window.location.href
             };

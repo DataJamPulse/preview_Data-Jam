@@ -17,6 +17,18 @@ exports.handler = async (event) => {
         const lead = JSON.parse(event.body);
         const results = { email: false, hubspot: false };
 
+        // Input validation - enforce length limits (defense in depth)
+        if (lead.name && lead.name.length > 100) lead.name = lead.name.substring(0, 100);
+        if (lead.email && lead.email.length > 254) lead.email = lead.email.substring(0, 254);
+        if (lead.company && lead.company.length > 100) lead.company = lead.company.substring(0, 100);
+        if (lead.message && lead.message.length > 2000) lead.message = lead.message.substring(0, 2000);
+        if (lead.page_url && lead.page_url.length > 500) lead.page_url = lead.page_url.substring(0, 500);
+
+        // Basic email validation
+        if (!lead.email || !lead.email.includes('@')) {
+            return { statusCode: 400, body: 'Invalid email' };
+        }
+
         // 1. Send email notification via Resend
         if (RESEND_API_KEY) {
             try {
@@ -44,21 +56,13 @@ exports.handler = async (event) => {
         }
 
         // 2. Push to HubSpot
-        console.log('HubSpot API Key exists:', !!HUBSPOT_API_KEY);
         if (HUBSPOT_API_KEY) {
             try {
-                console.log('Attempting HubSpot contact creation for:', lead.email);
                 const hubspotResponse = await createHubSpotContact(lead);
-                console.log('HubSpot response:', JSON.stringify(hubspotResponse));
                 results.hubspot = hubspotResponse.success;
-                if (!hubspotResponse.success) {
-                    console.error('HubSpot error:', hubspotResponse.error);
-                }
             } catch (hubspotError) {
                 console.error('HubSpot error:', hubspotError.message || hubspotError);
             }
-        } else {
-            console.log('HUBSPOT_API_KEY not set, skipping HubSpot');
         }
 
         return {
@@ -77,7 +81,6 @@ exports.handler = async (event) => {
  */
 async function createHubSpotContact(lead) {
     // First, check if contact exists
-    console.log('Searching HubSpot for existing contact:', lead.email);
     const searchResponse = await fetch(
         `https://api.hubapi.com/crm/v3/objects/contacts/search`,
         {
@@ -99,29 +102,25 @@ async function createHubSpotContact(lead) {
     );
 
     const searchData = await searchResponse.json();
-    console.log('HubSpot search response:', JSON.stringify(searchData));
     const existingContact = searchData.results?.[0];
 
-    // Prepare contact properties - using standard HubSpot fields only
-    // Custom properties (website_form_*) require exact internal names from HubSpot
+    // Prepare contact properties
     const properties = {
         email: lead.email,
         firstname: lead.name?.split(' ')[0] || '',
         lastname: lead.name?.split(' ').slice(1).join(' ') || '',
         company: lead.company || '',
-        lifecyclestage: 'lead'
+        lifecyclestage: 'lead',
+        hs_lead_status: 'NEW'
     };
 
-    // Add message to notes field if present (standard HubSpot field)
-    if (lead.message) {
-        properties.hs_lead_status = 'NEW';
+    // Marketing opt-in (custom property - needs to be created in HubSpot)
+    if (typeof lead.marketing_optin === 'boolean') {
+        properties.marketing_opt_in = lead.marketing_optin ? 'true' : 'false';
     }
-
-    console.log('HubSpot properties to send:', JSON.stringify(properties));
 
     if (existingContact) {
         // Update existing contact
-        console.log('Updating existing HubSpot contact:', existingContact.id);
         const updateResponse = await fetch(
             `https://api.hubapi.com/crm/v3/objects/contacts/${existingContact.id}`,
             {
@@ -133,16 +132,12 @@ async function createHubSpotContact(lead) {
                 body: JSON.stringify({ properties })
             }
         );
-        const updateText = await updateResponse.text();
-        console.log('HubSpot update response:', updateResponse.status, updateText);
         return {
             success: updateResponse.ok,
-            action: 'updated',
-            error: updateResponse.ok ? null : updateText
+            action: 'updated'
         };
     } else {
         // Create new contact
-        console.log('Creating new HubSpot contact');
         const createResponse = await fetch(
             'https://api.hubapi.com/crm/v3/objects/contacts',
             {
@@ -154,12 +149,9 @@ async function createHubSpotContact(lead) {
                 body: JSON.stringify({ properties })
             }
         );
-        const createText = await createResponse.text();
-        console.log('HubSpot create response:', createResponse.status, createText);
         return {
             success: createResponse.ok,
-            action: 'created',
-            error: createResponse.ok ? null : createText
+            action: 'created'
         };
     }
 }
@@ -168,6 +160,14 @@ async function createHubSpotContact(lead) {
  * Build HTML email content
  */
 function buildEmailHtml(lead) {
+    // Sanitize all user inputs to prevent HTML injection
+    const safeName = escapeHtml(lead.name) || '-';
+    const safeEmail = escapeHtml(lead.email) || '-';
+    const safeCompany = escapeHtml(lead.company) || '-';
+    const safeMessage = escapeHtml(lead.message) || '-';
+    const safePageUrl = escapeHtml(lead.page_url) || 'data-jam.com';
+    const marketingOptin = lead.marketing_optin ? 'Yes' : 'No';
+
     return `
         <h2>New Website Lead</h2>
         <p>A new lead has been submitted on data-jam.com</p>
@@ -175,15 +175,15 @@ function buildEmailHtml(lead) {
         <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Name</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${lead.name || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${safeName}</td>
             </tr>
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Email</td>
-                <td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${lead.email}">${lead.email || '-'}</a></td>
+                <td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${safeEmail}">${safeEmail}</a></td>
             </tr>
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Company</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${lead.company || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${safeCompany}</td>
             </tr>
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Type</td>
@@ -195,18 +195,32 @@ function buildEmailHtml(lead) {
             </tr>
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Message</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${lead.message || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${safeMessage}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Marketing Opt-in</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${marketingOptin}</td>
             </tr>
         </table>
 
         <p style="margin-top: 20px; color: #666; font-size: 12px;">
-            Submitted from: ${lead.page_url || 'data-jam.com'}<br>
+            Submitted from: ${safePageUrl}<br>
             Time: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}
         </p>
     `;
 }
 
 // Helper functions
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function formatType(type) {
     const types = {
         'media-owner': 'OOH Media Owner',
