@@ -11,13 +11,22 @@
 
 ## Recent Updates
 
-**2025-12-15 - DataJam Portal Authentication & UI Fixes:**
+**2025-12-15 - DataJam Portal Authentication & Project Access Control:**
 - ✅ **LOGIN NOW USES DATAJAM PORTAL CREDENTIALS**
   - No more separate installer account - use your DataJam Portal login
   - Same username/password as datajamreports.com
   - Authentication via Netlify function (`installer-auth.js`)
   - Rate limiting: 5 failed attempts = 15 minute lockout
   - Session stored in localStorage (persists across refreshes)
+  - Two-gate authentication: Pulse Reports access check → DataJam Portal validation
+- ✅ **PROJECT-BASED ACCESS CONTROL**
+  - Users only see projects they have access to (from DataJam Portal API)
+  - Project dropdown on new install form shows only authorized projects
+  - Projects page filters to only show authorized projects
+  - Installations view filters to only show installations for authorized projects
+  - Shipment destination dropdown uses authorized projects
+  - All dropdowns have "Other (Manual Entry)" fallback option
+  - SessionManager methods: getProjects(), getProjectNames(), hasProjectAccess()
 - ✅ **DESIGN IMPROVEMENTS**
   - Removed watermark logo background (was too distracting)
   - Premium dark theme with Abeat headline font
