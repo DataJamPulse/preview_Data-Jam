@@ -95,18 +95,20 @@ async function createHubSpotContact(lead) {
     const searchData = await searchResponse.json();
     const existingContact = searchData.results?.[0];
 
-    // Prepare contact properties
+    // Prepare contact properties - using standard HubSpot fields only
+    // Custom properties (website_form_*) require exact internal names from HubSpot
     const properties = {
         email: lead.email,
         firstname: lead.name?.split(' ')[0] || '',
         lastname: lead.name?.split(' ').slice(1).join(' ') || '',
         company: lead.company || '',
-        lead_source: 'Website Form',
-        lifecyclestage: 'lead',
-        website_form_type: formatType(lead.type),
-        website_form_interest: formatInterest(lead.interest),
-        website_form_message: lead.message || ''
+        lifecyclestage: 'lead'
     };
+
+    // Add message to notes field if present (standard HubSpot field)
+    if (lead.message) {
+        properties.hs_lead_status = 'NEW';
+    }
 
     if (existingContact) {
         // Update existing contact
