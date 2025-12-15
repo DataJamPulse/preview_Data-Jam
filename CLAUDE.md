@@ -152,14 +152,38 @@ Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSp
 - Captured in: Supabase, email notification, HubSpot
 - HubSpot property: `marketing_opt_in` (custom, single checkbox)
 
-## Installer Portal
+## Installer Portal (Dec 2024)
 
-- **URL:** /installation (placeholder page currently)
-- **Message:** "A to the Con, waiting on you bro... just say when"
-- **Future:** Alex's installer portal will be deployed here
-- **Backend:** Will connect to Supabase for install data (photos, WiFi creds, etc.)
-- **Auth:** Will use Supabase Auth when deployed
+- **URL:** https://preview.data-jam.com/installation
+- **Purpose:** Internal tool for Alex to track JamBox sensor installations
+- **Login:** Username/password auth against Supabase (credentials provided securely to Alex)
+- **Backend:** Supabase PostgreSQL with installer_* tables
+- **Storage:** Supabase Storage bucket `installer-photos` for installation photos
+- **Features:** Dashboard, new install form, view/edit/delete installs, inventory management, shipments, projects, user management, settings
+- **Offline:** Sync queue for offline operation (Alex works in basements with poor signal)
 - **Note:** Page has `noindex` meta tag - not for public/SEO
+
+### Installer Database Schema
+```
+installer_users          - App users (separate from Portal users)
+installer_projects       - Project list synced from Portal
+installer_installations  - Installation records with photos
+installer_inventory      - JamBox and cable stock levels
+installer_inventory_history - Audit trail of stock changes
+installer_shipments      - Shipments to project locations
+installer_sync_queue     - Offline sync queue
+```
+
+### Synology Folder (KEEP IN SYNC)
+**IMPORTANT:** Alex's original development folder must be kept in sync with the deployed version:
+```
+/Users/jav/Desktop/DATAJAM/SynologyDrive/Alex installer/datajam-installer-webapp/installation_web_app/
+```
+When making changes to `/installation/` in this repo, copy updated files back to the Synology folder so Alex can continue iterating. Key files:
+- `config.js` - Supabase configuration
+- `supabase-client.js` - Database client
+- All HTML pages with Supabase integration
+- `supabase/` folder with SQL schemas
 
 ## Environment Variables (Netlify)
 ```
