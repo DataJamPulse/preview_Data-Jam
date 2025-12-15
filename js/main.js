@@ -68,22 +68,31 @@
 
     /**
      * Splash screen intro animation
+     * Shows once per session to avoid friction for returning visitors
      */
     function initSplashScreen() {
         const splash = document.getElementById('splashScreen');
         if (!splash) return;
 
         const body = document.body;
+        const hasSeenSplash = sessionStorage.getItem('datajam_splash_seen');
 
-        // Always show splash on every visit
+        // Skip splash for returning visitors this session
+        if (hasSeenSplash) {
+            splash.remove();
+            return;
+        }
+
+        // First visit this session - show the splash
         body.classList.add('splash-active');
-        splash.addEventListener('click', dismissSplash);
+        splash.addEventListener('click', dismissSplash); // Click anywhere to skip
         setTimeout(dismissSplash, 5500);
 
         function dismissSplash() {
             if (splash.classList.contains('fade-out')) return;
             splash.classList.add('fade-out');
             body.classList.remove('splash-active');
+            sessionStorage.setItem('datajam_splash_seen', 'true');
             setTimeout(() => splash.remove(), 1000);
         }
     }
