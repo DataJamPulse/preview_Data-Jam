@@ -11,11 +11,24 @@
 
 ## Recent Updates
 
+**2025-12-15 - DataJam Portal Authentication:**
+- ✅ **LOGIN NOW USES DATAJAM PORTAL CREDENTIALS**
+  - No more separate installer account - use your DataJam Portal login
+  - Same username/password as datajamreports.com
+  - Authentication via Netlify function (`installer-auth.js`)
+  - Rate limiting: 5 failed attempts = 15 minute lockout
+  - Session stored in localStorage (persists across refreshes)
+- ✅ **DESIGN IMPROVEMENTS**
+  - Removed watermark logo background (was too distracting)
+  - Premium dark theme with Abeat headline font
+  - Floating particles animation on login page
+  - Noise texture overlay for premium feel
+  - Enhanced button hover effects with glow
+
 **2025-12-12 - Multi-User System, Enhancements & Project Tracking (Session 3):**
 - ✅ **MULTI-USER LOGIN SYSTEM** - Complete authentication
   - New login.html page with professional DataJam branding
-  - Default admin account: username `alex`, password `datajam2025`
-  - Create new user accounts with role assignment (admin/user)
+  - ~~Default admin account: username `alex`, password `datajam2025`~~ **(NOW USES DATAJAM PORTAL CREDENTIALS)**
   - Session management with localStorage
   - SessionManager utility in app.js for authentication
   - All pages protected - auto-redirect to login if not authenticated
@@ -142,7 +155,7 @@
 
 **2025-12-10 - UX Enhancements (earlier):**
 - ✅ Added project dropdown to Location Details section (pre-populated with current clients)
-- ✅ Implemented logo watermark background blend (3% opacity, centered, non-intrusive)
+- ~~✅ Implemented logo watermark background blend~~ **(REMOVED - was too distracting)**
 - ✅ Added new location types: Leisure Centre, Nightlife, Pubs
 - ✅ Implemented WiFi SSID autocomplete with smart history (remembers last 20 networks)
 - ✅ Updated data model to include projectName field

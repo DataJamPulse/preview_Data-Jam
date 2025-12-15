@@ -84,6 +84,7 @@ Premium marketing website for Data Jam, an **AI-powered movement intelligence pl
 /js/main.js              - Interactions (splash, cursor, animations, ROI calc)
 /netlify.toml            - Security headers (CSP), redirects, caching
 /netlify/functions/notify-lead.js - Email notification on new leads
+/netlify/functions/installer-auth.js - Installer login via DataJam Portal API
 /images/clients/         - Client logos
 ```
 
@@ -156,12 +157,21 @@ Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSp
 
 - **URL:** https://preview.data-jam.com/installation
 - **Purpose:** Internal tool for Alex to track JamBox sensor installations
-- **Login:** Username/password auth against Supabase (credentials provided securely to Alex)
-- **Backend:** Supabase PostgreSQL with installer_* tables
+- **Login:** DataJam Portal API authentication (same credentials as datajamreports.com)
+- **Auth Function:** `/netlify/functions/installer-auth.js` - validates against datajamportal.com
+- **Backend:** Supabase PostgreSQL with installer_* tables (for data storage only)
 - **Storage:** Supabase Storage bucket `installer-photos` for installation photos
 - **Features:** Dashboard, new install form, view/edit/delete installs, inventory management, shipments, projects, user management, settings
 - **Offline:** Sync queue for offline operation (Alex works in basements with poor signal)
 - **Note:** Page has `noindex` meta tag - not for public/SEO
+- **Design:** Premium dark theme with Abeat font, floating particles, noise texture
+
+### Installer Authentication
+- Uses DataJam Portal API (`datajamportal.com/CustomerAPI/GetUserProjects/`)
+- Same login credentials as DataJam Reports portal
+- Base64 Basic Auth via Netlify function (avoids CORS/SSL issues)
+- Rate limiting: 5 failed attempts = 15 minute lockout
+- Any valid Portal user can access (no whitelist currently)
 
 ### Installer Database Schema
 ```

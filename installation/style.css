@@ -136,25 +136,6 @@ h1, .page-header h1 {
     letter-spacing: 0.05em;
 }
 
-/* Watermark logo background blend */
-body::before {
-    content: '';
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60vw;
-    max-width: 800px;
-    height: 60vh;
-    background-image: url('logo.jpg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 0;
-}
-
 /* New App Layout with Sidebar */
 .app-layout {
     display: flex;

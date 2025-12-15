@@ -246,21 +246,14 @@
         </div>
     </div>
 
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
-    <script src="supabase-client.js"></script>
     <script>
-        // Login Page Manager (Supabase-enabled)
+        // Login Page Manager (DataJam Portal API)
         class LoginManager {
             constructor() {
                 this.init();
             }
 
-            async init() {
-                // Wait for Supabase to initialize
-                await db.init();
-
+            init() {
                 // Check if already logged in
                 const session = this.getSession();
                 if (session && session.username) {
@@ -273,8 +266,6 @@
                     e.preventDefault();
                     this.handleLogin();
                 });
-
-                // User registration disabled - admin creates accounts in Supabase
             }
 
             async handleLogin() {
@@ -293,70 +284,55 @@
                 loginBtn.disabled = true;
 
                 try {
-                    const result = await db.login(username, password);
+                    // Encode credentials to Base64 for DataJam Portal API
+                    const auth = btoa(`${username}:${password}`);
 
-                    if (result.success) {
+                    // Call Netlify function to authenticate against DataJam Portal
+                    const response = await fetch('/.netlify/functions/installer-auth', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ auth })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        // Store session
+                        const session = {
+                            username: username,
+                            fullName: username,  // DataJam Portal doesn't return full name
+                            role: 'installer',
+                            loginTime: new Date().toISOString(),
+                            projects: result.projects || []
+                        };
+                        localStorage.setItem('datajam_session', JSON.stringify(session));
+
                         this.showSuccess('Login successful! Redirecting...');
                         setTimeout(() => {
                             window.location.href = 'dashboard.html';
                         }, 1000);
                     } else {
-                        this.showError(result.error || 'Invalid username or password');
+                        this.showError(result.message || 'Invalid username or password');
                         loginBtn.textContent = originalText;
                         loginBtn.disabled = false;
                     }
                 } catch (err) {
+                    console.error('Login error:', err);
                     this.showError('Connection error. Please try again.');
                     loginBtn.textContent = originalText;
                     loginBtn.disabled = false;
                 }
             }
 
-            async showCreateAccount() {
-                const fullName = prompt('Enter your full name:');
-                if (!fullName) return;
-
-                const username = prompt('Choose a username:');
-                if (!username) return;
-
-                const email = prompt('Enter your email (optional):') || '';
-
-                const password = prompt('Choose a password (min 6 characters):');
-                if (!password || password.length < 6) {
-                    this.showError('Password must be at least 6 characters');
-                    return;
-                }
-
-                const confirmPassword = prompt('Confirm password:');
-                if (password !== confirmPassword) {
-                    this.showError('Passwords do not match');
-                    return;
-                }
-
-                try {
-                    const result = await db.createUser({
-                        username,
-                        password,
-                        fullName,
-                        email,
-                        role: 'user'
-                    });
-
-                    if (result.success) {
-                        this.showSuccess('Account created successfully! You can now log in.');
-                        document.getElementById('username').value = username;
-                        document.getElementById('password').value = '';
-                    } else {
-                        this.showError(result.error || 'Failed to create account');
-                    }
-                } catch (err) {
-                    this.showError('Connection error. Please try again.');
-                }
-            }
-
             getSession() {
                 const data = localStorage.getItem('datajam_session');
-                return data ? JSON.parse(data) : null;
+                try {
+                    return data ? JSON.parse(data) : null;
+                } catch (e) {
+                    return null;
+                }
             }
 
             showError(message) {
