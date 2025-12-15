@@ -224,99 +224,7 @@
                             <div class="form-group" style="grid-column: span 2;">
                                 <label for="shipDestination">Destination / Project *</label>
                                 <select id="shipDestination" required>
-                                    <option value="">Select destination...</option>
-                                    <optgroup label="Shopping Centers & Malls">
-                                        <option value="The Mall Wood Green">The Mall Wood Green</option>
-                                        <option value="The Mall Luton">The Mall Luton</option>
-                                        <option value="Market Place Bolton">Market Place Bolton</option>
-                                        <option value="Festival Place">Festival Place</option>
-                                        <option value="Manchester Arndale">Manchester Arndale</option>
-                                        <option value="Bullring">Bullring</option>
-                                        <option value="Eldon Square">Eldon Square</option>
-                                        <option value="Bluewater">Bluewater</option>
-                                        <option value="Metrocentre">Metrocentre</option>
-                                        <option value="Walthamstow">Walthamstow</option>
-                                        <option value="East Kilbride">East Kilbride</option>
-                                        <option value="Vanguada Mall">Vanguada Mall</option>
-                                        <option value="The Grove">The Grove</option>
-                                        <option value="Americana">Americana</option>
-                                        <option value="Pacific Palisades">Pacific Palisades</option>
-                                        <option value="The Commons">The Commons</option>
-                                    </optgroup>
-                                    <optgroup label="Outdoor Media">
-                                        <option value="Limited Space">Limited Space</option>
-                                        <option value="Smart Outdoor">Smart Outdoor</option>
-                                        <option value="Big Outdoor">Big Outdoor</option>
-                                        <option value="Dream Outdoor">Dream Outdoor</option>
-                                        <option value="Ocean">Ocean</option>
-                                        <option value="Mass Media - Pedestrian">Mass Media - Pedestrian</option>
-                                        <option value="Mass Media - Roadside">Mass Media - Roadside</option>
-                                        <option value="Open Media">Open Media</option>
-                                    </optgroup>
-                                    <optgroup label="Gyms & Fitness">
-                                        <option value="NGM Gyms">NGM Gyms</option>
-                                        <option value="NRG Gyms">NRG Gyms</option>
-                                        <option value="Fitness First">Fitness First</option>
-                                        <option value="Atmosphere Gyms">Atmosphere Gyms</option>
-                                        <option value="Gym TV">Gym TV</option>
-                                    </optgroup>
-                                    <optgroup label="Sports & Recreation">
-                                        <option value="Team Sports">Team Sports</option>
-                                        <option value="Goals D6">Goals D6</option>
-                                        <option value="Goals TV">Goals TV</option>
-                                        <option value="Golf Fang">Golf Fang</option>
-                                        <option value="Golf Clubs S.R">Golf Clubs S.R</option>
-                                        <option value="Stadium Centre">Stadium Centre</option>
-                                    </optgroup>
-                                    <optgroup label="Pubs & Nightlife">
-                                        <option value="Pubs">Pubs</option>
-                                        <option value="Nightlife">Nightlife</option>
-                                        <option value="Marstons">Marstons</option>
-                                        <option value="Atmosphere Pubs & Bars">Atmosphere Pubs & Bars</option>
-                                        <option value="Ministry">Ministry</option>
-                                    </optgroup>
-                                    <optgroup label="Leisure Centers">
-                                        <option value="Thistles SC">Thistles SC</option>
-                                        <option value="The Beacon Centre">The Beacon Centre</option>
-                                        <option value="The Exchange Ilford SC">The Exchange Ilford SC</option>
-                                        <option value="The Liberty Romford">The Liberty Romford</option>
-                                        <option value="Kingfisher">Kingfisher</option>
-                                        <option value="Jackson Square">Jackson Square</option>
-                                        <option value="Dolphin Centre Poole">Dolphin Centre Poole</option>
-                                    </optgroup>
-                                    <optgroup label="Retail">
-                                        <option value="Tesco">Tesco</option>
-                                        <option value="17&Central">17&Central</option>
-                                        <option value="Eastgate">Eastgate</option>
-                                    </optgroup>
-                                    <optgroup label="Transport & Travel">
-                                        <option value="Travel Units">Travel Units</option>
-                                        <option value="Le Shuttle">Le Shuttle</option>
-                                        <option value="MOTO Service Stations">MOTO Service Stations</option>
-                                        <option value="MFG">MFG</option>
-                                        <option value="LA Bus">LA Bus</option>
-                                    </optgroup>
-                                    <optgroup label="Digital & Media">
-                                        <option value="Seamless Digital">Seamless Digital</option>
-                                        <option value="Smart Digi">Smart Digi</option>
-                                        <option value="DCI Media">DCI Media</option>
-                                        <option value="Red Tail Creative Media">Red Tail Creative Media</option>
-                                        <option value="75 Media">75 Media</option>
-                                        <option value="Ad Board">Ad Board</option>
-                                        <option value="i-media">i-media</option>
-                                    </optgroup>
-                                    <optgroup label="Education">
-                                        <option value="NGM Universities">NGM Universities</option>
-                                        <option value="NGM Colleges">NGM Colleges</option>
-                                    </optgroup>
-                                    <optgroup label="Other">
-                                        <option value="Cinema">Cinema</option>
-                                        <option value="Rock Box">Rock Box</option>
-                                        <option value="Vendi Tech">Vendi Tech</option>
-                                        <option value="Kiosks">Kiosks</option>
-                                        <option value="Data Jam">Data Jam (Internal)</option>
-                                        <option value="__custom__">Other (Custom)...</option>
-                                    </optgroup>
+                                    <option value="">Loading projects...</option>
                                 </select>
                             </div>
                             <div class="form-group" id="customDestinationGroup" style="display: none; grid-column: span 2;">
@@ -386,7 +294,7 @@
             inventoryManager = new InventoryManager();
         }
 
-        // Populate user info in sidebar
+        // Populate user info in sidebar and shipment destination dropdown
         document.addEventListener('DOMContentLoaded', () => {
             const userNameEl = document.getElementById('currentUserName');
             const userRoleEl = document.getElementById('currentUserRole');
@@ -397,6 +305,59 @@
             if (userRoleEl && SessionManager) {
                 const role = SessionManager.getUserRole() || 'user';
                 userRoleEl.textContent = role;
+            }
+
+            // Populate shipment destination dropdown from authorized projects
+            const destSelect = document.getElementById('shipDestination');
+            if (destSelect && SessionManager) {
+                const projects = SessionManager.getProjects();
+                console.log('[INVENTORY] Authorized projects:', projects);
+
+                // Clear and rebuild dropdown
+                destSelect.innerHTML = '<option value="">Select destination...</option>';
+
+                if (projects && projects.length > 0) {
+                    // Add authorized projects
+                    projects.forEach(proj => {
+                        const name = proj.project_name || proj.ProjectName || proj.name;
+                        if (name) {
+                            const option = document.createElement('option');
+                            option.value = name;
+                            option.textContent = name;
+                            destSelect.appendChild(option);
+                        }
+                    });
+
+                    // Add separator and manual entry option
+                    const separator = document.createElement('option');
+                    separator.disabled = true;
+                    separator.textContent = '───────────────';
+                    destSelect.appendChild(separator);
+
+                    const otherOption = document.createElement('option');
+                    otherOption.value = '__custom__';
+                    otherOption.textContent = 'Other (Custom)...';
+                    destSelect.appendChild(otherOption);
+                } else {
+                    // No projects - allow manual entry
+                    destSelect.innerHTML = `
+                        <option value="">No authorized projects</option>
+                        <option value="__custom__">Enter destination manually...</option>
+                    `;
+                }
+
+                // Handle "Other" selection - show custom input
+                destSelect.addEventListener('change', function() {
+                    const customGroup = document.getElementById('customDestinationGroup');
+                    const customInput = document.getElementById('customDestination');
+                    if (this.value === '__custom__') {
+                        customGroup.style.display = 'block';
+                        customInput.required = true;
+                    } else {
+                        customGroup.style.display = 'none';
+                        customInput.required = false;
+                    }
+                });
             }
         });
     </script>

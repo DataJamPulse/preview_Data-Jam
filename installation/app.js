@@ -44,6 +44,28 @@ const SessionManager = {
     getUserRole() {
         const session = this.getSession();
         return session ? session.role : null;
+    },
+
+    // Get authorized projects from session (from DataJam Portal API)
+    getProjects() {
+        const session = this.getSession();
+        return session && session.projects ? session.projects : [];
+    },
+
+    // Get list of authorized project names
+    getProjectNames() {
+        const projects = this.getProjects();
+        return projects.map(p => p.project_name || p.ProjectName || p.name).filter(Boolean);
+    },
+
+    // Check if user has access to a specific project
+    hasProjectAccess(projectName) {
+        if (!projectName) return true; // No project = allow (for legacy data)
+        const authorizedNames = this.getProjectNames();
+        if (authorizedNames.length === 0) return true; // No restrictions if no projects defined
+        return authorizedNames.some(name =>
+            name.toLowerCase() === projectName.toLowerCase()
+        );
     }
 };
 
@@ -488,11 +510,17 @@ class InstallationManager {
         // Encrypt password before storing
         const encryptedPassword = await EncryptionUtil.encrypt(formData.get('password') || '');
 
+        // Handle project name - use custom input if "Other" selected
+        let projectName = formData.get('projectName');
+        if (projectName === '__other__') {
+            projectName = formData.get('customProjectName') || '';
+        }
+
         const installation = {
             id: this.editMode ? this.editId : Date.now(),
             timestamp: this.editMode ? this.installations.find(i => i.id === this.editId)?.timestamp : new Date().toISOString(),
             status: formData.get('status') || 'completed',
-            projectName: formData.get('projectName'),
+            projectName: projectName,
             clientName: formData.get('clientName'),
             clientContact: formData.get('clientContact'),
             clientEmail: formData.get('clientEmail'),
@@ -827,7 +855,19 @@ class InstallationListManager {
 
     loadInstallations() {
         const stored = StorageUtil.safeGet('datajam_installations');
-        return StorageUtil.safeParse(stored, []);
+        const allInstallations = StorageUtil.safeParse(stored, []);
+
+        // Filter by authorized projects (if user has restrictions)
+        const authorizedProjects = SessionManager.getProjectNames();
+        if (authorizedProjects.length > 0) {
+            return allInstallations.filter(install => {
+                // Allow if no project set (legacy data) or project is authorized
+                if (!install.projectName) return true;
+                return SessionManager.hasProjectAccess(install.projectName);
+            });
+        }
+
+        return allInstallations;
     }
 
     renderInstallations() {

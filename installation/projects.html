@@ -197,7 +197,11 @@
             }
 
             buildProjectDirectory() {
-                // All projects from DataJam Portal
+                // Get authorized projects from session
+                const authorizedProjectNames = SessionManager.getProjectNames();
+                console.log('[PROJECTS] Authorized projects:', authorizedProjectNames);
+
+                // All projects from DataJam Portal (master list)
                 const allProjects = [
                     // Shopping Centers & Malls
                     { id: 'the-mall-wood-green', name: 'The Mall Wood Green', description: 'Shopping center' },
@@ -361,11 +365,26 @@
                 // Get shipment allocations
                 const allocations = this.calculateProjectAllocations();
 
-                // Build project data with installation counts and shipment allocations
-                const projectData = allProjects.map(project => {
-                    const projectInstalls = this.installations.filter(install =>
-                        install.projectName === project.id
+                // Filter to only authorized projects (if user has project restrictions)
+                let filteredProjects = allProjects;
+                if (authorizedProjectNames.length > 0) {
+                    filteredProjects = allProjects.filter(project =>
+                        authorizedProjectNames.some(authName =>
+                            authName.toLowerCase() === project.name.toLowerCase() ||
+                            authName.toLowerCase() === project.id.toLowerCase()
+                        )
                     );
+                    console.log('[PROJECTS] Filtered to', filteredProjects.length, 'authorized projects');
+                }
+
+                // Build project data with installation counts and shipment allocations
+                const projectData = filteredProjects.map(project => {
+                    // Match installations by id or name (case-insensitive)
+                    const projectInstalls = this.installations.filter(install => {
+                        const installProject = (install.projectName || '').toLowerCase();
+                        return installProject === project.id.toLowerCase() ||
+                               installProject === project.name.toLowerCase();
+                    });
 
                     // Get unique customers for this project
                     const customers = new Set(projectInstalls.map(i => i.clientName));
