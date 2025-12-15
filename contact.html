@@ -232,5 +232,81 @@
     </div>
 
     <script src="js/main.js"></script>
+
+    <!-- Supabase Lead Capture -->
+    <script>
+    (function() {
+        'use strict';
+
+        // Supabase config
+        const SUPABASE_URL = 'https://ysavdqiiilslrigtpacu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_a39x6wQvVEyLCsX9gxNtBw_eEZDp-Gj';
+
+        const form = document.getElementById('contact-form');
+        if (!form) return;
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            // Show loading state
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+
+            // Collect form data
+            const leadData = {
+                name: form.querySelector('#name').value.trim(),
+                email: form.querySelector('#email').value.trim(),
+                company: form.querySelector('#company').value.trim() || null,
+                type: form.querySelector('#type').value || null,
+                interest: form.querySelector('#interest').value || null,
+                message: form.querySelector('#message').value.trim() || null,
+                source: 'website',
+                page_url: window.location.href
+            };
+
+            try {
+                // Send to Supabase
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/website_leads`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(leadData)
+                });
+
+                if (response.ok) {
+                    // Success - redirect to thank you page
+                    window.location.href = '/contact-success.html';
+                } else {
+                    throw new Error('Failed to submit');
+                }
+            } catch (error) {
+                console.error('Lead submission error:', error);
+
+                // Fallback: try Netlify Forms
+                try {
+                    const formData = new FormData(form);
+                    await fetch('/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams(formData).toString()
+                    });
+                    window.location.href = '/contact-success.html';
+                } catch (fallbackError) {
+                    // Both failed - show error
+                    alert('Sorry, there was an error sending your message. Please email us directly at hello@data-jam.com');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
