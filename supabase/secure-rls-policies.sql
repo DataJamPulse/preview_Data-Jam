@@ -12,7 +12,6 @@ DROP POLICY IF EXISTS "Allow all for anon" ON installer_installations;
 DROP POLICY IF EXISTS "Allow all for anon" ON installer_inventory;
 DROP POLICY IF EXISTS "Allow all for anon" ON installer_inventory_history;
 DROP POLICY IF EXISTS "Allow all for anon" ON installer_shipments;
-DROP POLICY IF EXISTS "Allow all for anon" ON installer_sync_queue;
 
 -- ============================================
 -- INSTALLER_USERS TABLE
@@ -113,23 +112,6 @@ CREATE POLICY "Users update shipments" ON installer_shipments
     FOR UPDATE USING (true);
 
 CREATE POLICY "Users delete shipments" ON installer_shipments
-    FOR DELETE USING (true);
-
--- ============================================
--- INSTALLER_SYNC_QUEUE TABLE
--- Users manage their own sync queue
--- ============================================
-
-CREATE POLICY "Users read sync queue" ON installer_sync_queue
-    FOR SELECT USING (true);
-
-CREATE POLICY "Users insert sync queue" ON installer_sync_queue
-    FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Users update sync queue" ON installer_sync_queue
-    FOR UPDATE USING (true);
-
-CREATE POLICY "Users delete sync queue" ON installer_sync_queue
     FOR DELETE USING (true);
 
 -- ============================================
