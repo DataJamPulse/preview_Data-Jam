@@ -44,16 +44,21 @@ exports.handler = async (event) => {
         }
 
         // 2. Push to HubSpot
+        console.log('HubSpot API Key exists:', !!HUBSPOT_API_KEY);
         if (HUBSPOT_API_KEY) {
             try {
+                console.log('Attempting HubSpot contact creation for:', lead.email);
                 const hubspotResponse = await createHubSpotContact(lead);
+                console.log('HubSpot response:', JSON.stringify(hubspotResponse));
                 results.hubspot = hubspotResponse.success;
                 if (!hubspotResponse.success) {
                     console.error('HubSpot error:', hubspotResponse.error);
                 }
             } catch (hubspotError) {
-                console.error('HubSpot error:', hubspotError);
+                console.error('HubSpot error:', hubspotError.message || hubspotError);
             }
+        } else {
+            console.log('HUBSPOT_API_KEY not set, skipping HubSpot');
         }
 
         return {
@@ -72,6 +77,7 @@ exports.handler = async (event) => {
  */
 async function createHubSpotContact(lead) {
     // First, check if contact exists
+    console.log('Searching HubSpot for existing contact:', lead.email);
     const searchResponse = await fetch(
         `https://api.hubapi.com/crm/v3/objects/contacts/search`,
         {
@@ -93,6 +99,7 @@ async function createHubSpotContact(lead) {
     );
 
     const searchData = await searchResponse.json();
+    console.log('HubSpot search response:', JSON.stringify(searchData));
     const existingContact = searchData.results?.[0];
 
     // Prepare contact properties - using standard HubSpot fields only
@@ -110,8 +117,11 @@ async function createHubSpotContact(lead) {
         properties.hs_lead_status = 'NEW';
     }
 
+    console.log('HubSpot properties to send:', JSON.stringify(properties));
+
     if (existingContact) {
         // Update existing contact
+        console.log('Updating existing HubSpot contact:', existingContact.id);
         const updateResponse = await fetch(
             `https://api.hubapi.com/crm/v3/objects/contacts/${existingContact.id}`,
             {
@@ -123,13 +133,16 @@ async function createHubSpotContact(lead) {
                 body: JSON.stringify({ properties })
             }
         );
+        const updateText = await updateResponse.text();
+        console.log('HubSpot update response:', updateResponse.status, updateText);
         return {
             success: updateResponse.ok,
             action: 'updated',
-            error: updateResponse.ok ? null : await updateResponse.text()
+            error: updateResponse.ok ? null : updateText
         };
     } else {
         // Create new contact
+        console.log('Creating new HubSpot contact');
         const createResponse = await fetch(
             'https://api.hubapi.com/crm/v3/objects/contacts',
             {
@@ -141,10 +154,12 @@ async function createHubSpotContact(lead) {
                 body: JSON.stringify({ properties })
             }
         );
+        const createText = await createResponse.text();
+        console.log('HubSpot create response:', createResponse.status, createText);
         return {
             success: createResponse.ok,
             action: 'created',
-            error: createResponse.ok ? null : await createResponse.text()
+            error: createResponse.ok ? null : createText
         };
     }
 }
