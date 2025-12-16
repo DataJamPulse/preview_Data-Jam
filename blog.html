@@ -263,15 +263,10 @@
                         'Prefer': 'return=minimal'
                     },
                     body: JSON.stringify({
-                        name: null,
+                        name: 'Newsletter Subscriber',
                         email: email,
-                        company: null,
-                        type: null,
                         interest: 'newsletter',
-                        message: null,
-                        marketing_optin: true,
-                        source: 'blog_subscribe',
-                        page_url: window.location.href
+                        source: 'blog_subscribe'
                     })
                 });
 
