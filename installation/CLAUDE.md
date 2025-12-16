@@ -11,41 +11,27 @@
 
 ## Recent Updates
 
-**2025-12-16 - SECURITY HARDENING (Week 1 Critical Fixes):**
-- ✅ **HTTP-ONLY COOKIE SESSIONS** (replaces localStorage)
-  - Sessions now use signed JWT tokens in HTTP-only cookies
-  - Session data cannot be read or modified by JavaScript (prevents XSS token theft)
-  - Server-side validation on every page load via session-manager.js
-  - 8-hour session expiry with automatic logout
-  - SameSite=Strict cookies prevent CSRF attacks
-  - **REQUIRES:** Set `SESSION_SECRET` environment variable in Netlify dashboard
-- ✅ **SERVER-SIDE ROLE VERIFICATION** (prevents admin spoofing)
-  - Admin role determined by server based on username/email
-  - `@data-jam.com` emails and `admin` username get admin role
-  - Role cannot be changed client-side - embedded in signed JWT
-  - determineRole() function in installer-auth.js
-- ✅ **REMOVED ALL INLINE ONCLICK HANDLERS** (45+ handlers)
-  - Replaced with event delegation pattern (event-handlers.js)
-  - All click events now use data-action attributes
-  - Eliminates major XSS attack vector
-  - Allows stricter CSP (working toward removing 'unsafe-inline')
-- ✅ **CSRF TOKEN INFRASTRUCTURE**
-  - CSRF tokens generated server-side on session creation
-  - Available via AuthClient.getCsrfToken()
-  - Verification endpoint: POST /verify-csrf
-  - Ready for use when localStorage operations move to server APIs
-- ✅ **NEW SECURITY FILES:**
-  - `netlify/functions/session-manager.js` - JWT session management
-  - `installation/auth-client.js` - Secure client-side auth wrapper
-  - `installation/event-handlers.js` - Event delegation module
-- ✅ **AUTHENTICATION FLOW UPDATED:**
-  - installer-auth.js now sets HTTP-only cookie on successful auth
-  - login.html uses AuthClient.login() instead of localStorage
-  - SessionManager wrapper maintains backward compatibility
-- **⚠️ ACTION REQUIRED:**
-  - Add `SESSION_SECRET` in Netlify Environment Variables
-  - Generate with: `openssl rand -hex 32`
-  - Without this, a fallback dev secret is used (insecure for production)
+**2025-12-16 - Security Hardening ROLLED BACK:**
+- ⚠️ **JWT/HTTP-ONLY COOKIE IMPLEMENTATION REVERTED**
+  - The security hardening changes caused 502 Bad Gateway errors
+  - JWT creation in Netlify functions was crashing/timing out
+  - Rolled back to localStorage-based auth (working version)
+  - Files reverted: installer-auth.js, login.html, app.js, all HTML pages
+- ⚠️ **KNOWN VULNERABILITIES (to be fixed incrementally):**
+  - Sessions stored in localStorage (XSS can steal them)
+  - Admin role determined client-side (can be spoofed)
+  - Inline onclick handlers still present (XSS vector)
+- 📋 **PLANNED FIX APPROACH:**
+  - Will re-implement security one change at a time
+  - Step 1: Remove inline onclick handlers (lowest risk)
+  - Step 2: Server-side role verification
+  - Step 3: HTTP-only cookie sessions
+  - Each change to be tested thoroughly before next
+- **FILES CREATED BUT NOT IN USE:**
+  - `netlify/functions/session-manager.js` - exists but not called
+  - `installation/auth-client.js` - exists but not loaded
+  - `installation/event-handlers.js` - exists but not loaded
+- **SESSION_SECRET env var** - added to Netlify but not currently used
 
 **2025-12-16 - Access Control, Calendar Sync & API Fixes:**
 - ✅ **STRICT PROJECT FILTERING FOR NON-ADMINS**

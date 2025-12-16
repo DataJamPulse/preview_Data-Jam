@@ -279,14 +279,11 @@ SESSION_SECRET=xxxxxx (64-char hex for JWT signing - generate with: openssl rand
 ## Recent Updates (Dec 2024 - Dec 2025)
 
 ### Dec 2025
-- **SECURITY HARDENING (Week 1 Critical Fixes)**
-  - HTTP-only cookie sessions replace localStorage (prevents XSS token theft)
-  - Server-side session validation on every page load
-  - Server-side admin role verification (prevents spoofing)
-  - Removed all 45+ inline onclick handlers (XSS prevention)
-  - Event delegation module for CSP compliance
-  - CSRF token infrastructure ready for server-side APIs
-  - New files: session-manager.js, auth-client.js, event-handlers.js
+- **SECURITY HARDENING ATTEMPTED & ROLLED BACK**
+  - JWT/HTTP-only cookie implementation caused 502 errors in Netlify functions
+  - Reverted to localStorage-based auth (working)
+  - Security files created but not in use: session-manager.js, auth-client.js, event-handlers.js
+  - Known vulnerabilities to be fixed incrementally (localStorage sessions, client-side role, inline onclick)
 - **Installer Portal - Calendar Sync** - .ics export and Google Calendar integration for installation scheduling
 - **Flexible project matching** - partial/contains matching for project names (handles API variations)
 - **API response fix** - nested project array extraction from DataJam Portal API
