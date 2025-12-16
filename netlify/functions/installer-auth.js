@@ -248,7 +248,7 @@ function validateDataJamCredentials(auth, corsHeaders, clientIP, username) {
           message: 'Authentication server timeout. Please try again.'
         })
       });
-    }, 15000); // 15 second timeout
+    }, 25000); // 25 second timeout (DataJam Portal can be slow)
 
     const req = https.request(options, (res) => {
       let data = '';
