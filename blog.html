@@ -149,7 +149,13 @@
             <div class="blog-newsletter animate-on-scroll" style="margin-top: var(--space-xl); text-align: center; background: rgba(230, 47, 110, 0.1); padding: var(--space-lg); border-radius: var(--radius-md);">
                 <h3>Stay in the Loop</h3>
                 <p style="margin-bottom: var(--space-md);">Get the latest OOH measurement insights delivered to your inbox.</p>
-                <a href="contact.html" class="btn btn-primary">Subscribe to Updates</a>
+                <form id="subscribe-form" class="subscribe-form">
+                    <div class="subscribe-input-group">
+                        <input type="email" id="subscribe-email" placeholder="Enter your email" required maxlength="254">
+                        <button type="submit" class="btn btn-primary">Subscribe</button>
+                    </div>
+                    <p class="subscribe-message" id="subscribe-message" style="display: none; margin-top: 12px;"></p>
+                </form>
             </div>
         </div>
     </section>
@@ -220,5 +226,73 @@
     </div>
 
     <script src="js/main.js"></script>
+
+    <!-- Subscribe Form Handler -->
+    <script>
+    (function() {
+        'use strict';
+
+        const SUPABASE_URL = 'https://ysavdqiiilslrigtpacu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzYXZkcWlpaWxzbHJpZ3RwYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTU0NTYsImV4cCI6MjA4MDg5MTQ1Nn0.DrsEv_e_7M8qL1PmGpTMluGtV8C1qRfzLccK6y3L9RI';
+
+        const form = document.getElementById('subscribe-form');
+        if (!form) return;
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const emailInput = document.getElementById('subscribe-email');
+            const message = document.getElementById('subscribe-message');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const email = emailInput.value.trim();
+
+            if (!email) return;
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Subscribing...';
+            message.style.display = 'none';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/website_leads`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        name: null,
+                        email: email,
+                        company: null,
+                        type: null,
+                        interest: 'newsletter',
+                        message: null,
+                        marketing_optin: true,
+                        source: 'blog_subscribe',
+                        page_url: window.location.href
+                    })
+                });
+
+                if (response.ok) {
+                    message.textContent = 'Thanks for subscribing!';
+                    message.style.color = '#14B8A6';
+                    message.style.display = 'block';
+                    emailInput.value = '';
+                } else {
+                    throw new Error('Failed to subscribe');
+                }
+            } catch (error) {
+                message.textContent = 'Something went wrong. Please try again.';
+                message.style.color = '#E62F6E';
+                message.style.display = 'block';
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Subscribe';
+        });
+    })();
+    </script>
 </body>
 </html>
