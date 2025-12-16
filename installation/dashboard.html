@@ -40,7 +40,7 @@
                     </svg>
                     View Installs
                 </a>
-                <a href="inventory.html">
+                <a href="inventory.html" id="navInventory" class="admin-only">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="7" width="20" height="14" rx="2"/>
                         <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
@@ -56,7 +56,7 @@
                     </svg>
                     Projects
                 </a>
-                <a href="users.html">
+                <a href="users.html" id="navUsers" class="admin-only">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -118,7 +118,7 @@
                     </div>
                 </a>
 
-                <a href="inventory.html" class="stat-card stat-card-link">
+                <a href="inventory.html" class="stat-card stat-card-link admin-only" id="statInventory">
                     <div class="stat-icon" style="background: linear-gradient(135deg, #E94B52 0%, #FF6B35 100%);">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
                             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -404,6 +404,13 @@
             if (userRoleEl && SessionManager) {
                 const role = SessionManager.getUserRole() || 'user';
                 userRoleEl.textContent = role;
+            }
+
+            // Hide admin-only elements for non-admins
+            if (SessionManager && !SessionManager.isAdmin()) {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = 'none';
+                });
             }
 
             // Force navigation on New Install links (workaround for navigation issue)

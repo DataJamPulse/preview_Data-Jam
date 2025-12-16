@@ -9,9 +9,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="../images/favicon.png">
+    <style>
+        /* Hide content until admin check passes */
+        .app-layout { opacity: 0; transition: opacity 0.2s ease; }
+        .app-layout.authorized { opacity: 1; }
+        .admin-gate-loading {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary, #0A0C11);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .admin-gate-loading.hidden { display: none; }
+    </style>
 </head>
 <body>
-    <div class="app-layout">
+    <!-- Loading overlay - hidden once authorized -->
+    <div class="admin-gate-loading" id="adminGate">
+        <div style="text-align: center; color: #888;">
+            <div style="font-size: 24px; margin-bottom: 8px;">🔐</div>
+            <div>Checking access...</div>
+        </div>
+    </div>
+
+    <div class="app-layout" id="appLayout">
         <aside class="sidebar">
             <div class="logo">
                 <img src="logo-gradient.png" alt="DataJam" class="logo-image">
@@ -55,7 +75,7 @@
                     </svg>
                     Projects
                 </a>
-                <a href="users.html">
+                <a href="users.html" class="admin-only">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -288,10 +308,13 @@
     <script src="supabase-client.js"></script>
     <script src="app.js"></script>
     <script>
-        // Initialize inventory manager when page loads
-        let inventoryManager;
-        if (typeof InventoryManager !== 'undefined') {
-            inventoryManager = new InventoryManager();
+        // Protect this page - admin only
+        if (SessionManager && !SessionManager.isAdmin()) {
+            window.location.href = 'dashboard.html';
+        } else {
+            // Admin authorized - show content
+            document.getElementById('appLayout').classList.add('authorized');
+            document.getElementById('adminGate').classList.add('hidden');
         }
 
         // Populate user info in sidebar and shipment destination dropdown
@@ -305,6 +328,13 @@
             if (userRoleEl && SessionManager) {
                 const role = SessionManager.getUserRole() || 'user';
                 userRoleEl.textContent = role;
+            }
+
+            // Hide admin-only elements for non-admins (shouldn't reach here, but just in case)
+            if (SessionManager && !SessionManager.isAdmin()) {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = 'none';
+                });
             }
 
             // Populate shipment destination dropdown from authorized projects

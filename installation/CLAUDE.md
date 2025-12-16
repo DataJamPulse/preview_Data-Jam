@@ -27,6 +27,15 @@
   - Shipment destination dropdown uses authorized projects
   - All dropdowns have "Other (Manual Entry)" fallback option
   - SessionManager methods: getProjects(), getProjectNames(), hasProjectAccess()
+- ✅ **ADMIN-ONLY ACCESS CONTROL**
+  - **Inventory** and **Users** pages are admin-only (internal DataJam use)
+  - Admin role granted to: @data-jam.com email addresses OR username "admin"
+  - Non-admin users: Inventory and Users hidden from sidebar navigation
+  - Direct URL access protected: inventory.html and users.html redirect non-admins to dashboard
+  - **Content flash prevention**: Loading overlay hides page until admin check passes
+  - SessionManager methods: isAdmin(), requireAdmin()
+  - CSS class `.admin-only` used to mark restricted nav links
+  - All pages hide admin-only elements via JavaScript on DOMContentLoaded
 - ✅ **DESIGN IMPROVEMENTS**
   - Removed watermark logo background (was too distracting)
   - Premium dark theme with Abeat headline font

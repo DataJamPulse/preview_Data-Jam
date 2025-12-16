@@ -299,13 +299,18 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
+                        // Determine role based on email domain or username
+                        // @data-jam.com users and 'admin' username get admin access (can see Inventory and Users)
+                        const lowerUsername = username.toLowerCase();
+                        const isAdmin = lowerUsername.endsWith('@data-jam.com') || lowerUsername === 'admin';
+
                         // Store session
                         const session = {
                             username: username,
                             fullName: username,  // DataJam Portal doesn't return full name
-                            role: 'installer',
+                            role: isAdmin ? 'admin' : 'installer',
                             loginTime: new Date().toISOString(),
-                            projects: result.projects || []
+                            projects: Array.isArray(result.projects) ? result.projects : []
                         };
                         localStorage.setItem('datajam_session', JSON.stringify(session));
 

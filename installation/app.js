@@ -42,15 +42,38 @@ const SessionManager = {
         return session ? session.role : null;
     },
 
+    // Check if current user is admin (@data-jam.com or 'admin' username)
+    isAdmin() {
+        const session = this.getSession();
+        if (!session) return false;
+        // Check role first (set at login)
+        if (session.role === 'admin') return true;
+        // Fallback: check email domain or admin username
+        const username = (session.username || '').toLowerCase();
+        return username.endsWith('@data-jam.com') || username === 'admin';
+    },
+
+    // Require admin access - redirect to dashboard if not admin
+    requireAdmin() {
+        if (!this.isAdmin()) {
+            window.location.href = 'dashboard.html';
+            return false;
+        }
+        return true;
+    },
+
     // Get authorized projects from session (from DataJam Portal API)
     getProjects() {
         const session = this.getSession();
-        return session && session.projects ? session.projects : [];
+        const projects = session && session.projects ? session.projects : [];
+        // Ensure we always return an array
+        return Array.isArray(projects) ? projects : [];
     },
 
     // Get list of authorized project names
     getProjectNames() {
         const projects = this.getProjects();
+        if (!Array.isArray(projects)) return [];
         return projects.map(p => p.project_name || p.ProjectName || p.name).filter(Boolean);
     },
 
