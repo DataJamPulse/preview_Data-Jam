@@ -3,6 +3,16 @@
 [build]
   publish = "."
 
+# Function configuration - increase timeout for slow external APIs
+[functions]
+  node_bundler = "esbuild"
+
+[functions."installer-auth"]
+  timeout = 26
+
+[functions."session-manager"]
+  timeout = 10
+
 # Security headers for all pages
 [[headers]]
   for = "/*"
