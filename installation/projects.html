@@ -365,9 +365,15 @@
                 // Get shipment allocations
                 const allocations = this.calculateProjectAllocations();
 
-                // Filter to only authorized projects (if user has project restrictions)
-                let filteredProjects = allProjects;
-                if (authorizedProjectNames.length > 0) {
+                // Filter to only authorized projects
+                // Admins see all, non-admins see only their authorized projects
+                let filteredProjects = [];
+                if (SessionManager.isAdmin()) {
+                    // Admins see all projects
+                    filteredProjects = allProjects;
+                    console.log('[PROJECTS] Admin user - showing all', allProjects.length, 'projects');
+                } else if (authorizedProjectNames.length > 0) {
+                    // Non-admin with authorized projects - show only those
                     filteredProjects = allProjects.filter(project =>
                         authorizedProjectNames.some(authName =>
                             authName.toLowerCase() === project.name.toLowerCase() ||
@@ -375,6 +381,10 @@
                         )
                     );
                     console.log('[PROJECTS] Filtered to', filteredProjects.length, 'authorized projects');
+                } else {
+                    // Non-admin with no authorized projects - show nothing
+                    console.log('[PROJECTS] No authorized projects for this user');
+                    filteredProjects = [];
                 }
 
                 // Build project data with installation counts and shipment allocations

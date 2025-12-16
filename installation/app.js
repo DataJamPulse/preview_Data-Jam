@@ -79,9 +79,13 @@ const SessionManager = {
 
     // Check if user has access to a specific project
     hasProjectAccess(projectName) {
-        if (!projectName) return true; // No project = allow (for legacy data)
+        // Admins have access to everything
+        if (this.isAdmin()) return true;
+        // No project set = allow (for legacy data)
+        if (!projectName) return true;
         const authorizedNames = this.getProjectNames();
-        if (authorizedNames.length === 0) return true; // No restrictions if no projects defined
+        // Non-admin with no authorized projects = no access
+        if (authorizedNames.length === 0) return false;
         return authorizedNames.some(name =>
             name.toLowerCase() === projectName.toLowerCase()
         );
@@ -874,7 +878,12 @@ class InstallationListManager {
         const stored = StorageUtil.safeGet('datajam_installations');
         const allInstallations = StorageUtil.safeParse(stored, []);
 
-        // Filter by authorized projects (if user has restrictions)
+        // Admins see all installations
+        if (SessionManager.isAdmin()) {
+            return allInstallations;
+        }
+
+        // Filter by authorized projects for non-admins
         const authorizedProjects = SessionManager.getProjectNames();
         if (authorizedProjects.length > 0) {
             return allInstallations.filter(install => {
@@ -884,7 +893,8 @@ class InstallationListManager {
             });
         }
 
-        return allInstallations;
+        // Non-admin with no authorized projects = no installations
+        return [];
     }
 
     renderInstallations() {

@@ -240,7 +240,24 @@
             loadInstallations() {
                 try {
                     const data = localStorage.getItem('datajam_installations');
-                    return data ? JSON.parse(data) : [];
+                    const allInstallations = data ? JSON.parse(data) : [];
+
+                    // Admins see all installations
+                    if (SessionManager.isAdmin()) {
+                        return allInstallations;
+                    }
+
+                    // Filter by authorized projects for non-admins
+                    const authorizedProjects = SessionManager.getProjectNames();
+                    if (authorizedProjects.length > 0) {
+                        return allInstallations.filter(install => {
+                            if (!install.projectName) return true;
+                            return SessionManager.hasProjectAccess(install.projectName);
+                        });
+                    }
+
+                    // Non-admin with no authorized projects = no installations
+                    return [];
                 } catch (error) {
                     console.error('Error loading installations:', error);
                     return [];
