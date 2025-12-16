@@ -11,6 +11,24 @@
 
 ## Recent Updates
 
+**2025-12-16 - Access Control Improvements & Project Logos:**
+- ✅ **STRICT PROJECT FILTERING FOR NON-ADMINS**
+  - Admins see ALL projects and installations
+  - Non-admins ONLY see projects they are authorized for (from DataJam Portal API)
+  - Non-admins with no authorized projects see NOTHING (empty list)
+  - Fixed: Previously showed all if no authorized projects
+  - Dashboard stats, installations, and projects pages all filter correctly
+- ✅ **PROJECT CARD LOGOS**
+  - 25+ projects mapped to client logos (Limited Space, Smart Outdoor, Tesco, etc.)
+  - Logos stored in `/images/clients/` folder
+  - Projects without logos show gradient initials as fallback
+- ✅ **UI POLISH**
+  - Clear All Data button restyled to btn-secondary with trash icon
+  - Double confirmation dialog already in place
+- ✅ **BUG FIXES**
+  - Fixed `projects.map is not a function` error with Array.isArray() checks
+  - Fixed duplicate `inventoryManager` declaration in inventory.html
+
 **2025-12-15 - DataJam Portal Authentication & Project Access Control:**
 - ✅ **LOGIN NOW USES DATAJAM PORTAL CREDENTIALS**
   - No more separate installer account - use your DataJam Portal login
