@@ -168,10 +168,20 @@ Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSp
 - **Design:** Premium dark theme with Abeat font, floating particles, noise texture
 - **UI:** Consistent sidebar on all pages with user profile display and logout button
 
-### Installer Authentication (v2.0.0 - Dec 2025)
+### Installer Authentication (v3.0.0 - Dec 2025)
+**Secure HTTP-only cookie sessions with server-side validation:**
+
+**Session Security:**
+- JWT tokens stored in HTTP-only cookies (not localStorage - prevents XSS theft)
+- Server-side session validation on every page load
+- 8-hour session expiry with automatic logout
+- SameSite=Strict cookies prevent CSRF attacks
+- CSRF tokens embedded in sessions for future server-side operations
+
 **Two-gate authentication system:**
 1. **Gate 1 (Pulse Reports):** Checks `installer_access` flag via datajamreports.com API
 2. **Gate 2 (DataJam Portal):** Validates credentials against datajamportal.com
+3. **Gate 3 (Session):** Server creates signed JWT, sets HTTP-only cookie
 
 **Flow:**
 ```
@@ -179,6 +189,7 @@ User Login → Extract email from auth
            → Call Pulse Reports /installer-check/:email
            → If hasAccess=false → DENY (never calls DataJam API)
            → If hasAccess=true → Validate credentials against DataJam Portal
+           → Create JWT with role + projects → Set HTTP-only cookie
            → Return success/failure
 ```
 
@@ -202,9 +213,18 @@ User Login → Extract email from auth
 - API response handling: extracts nested `result.projects.projects` array from DataJam Portal
 
 **Technical:**
-- Auth function: `/netlify/functions/installer-auth.js` v2.0.0
+- Auth function: `/netlify/functions/installer-auth.js` v3.0.0
+- Session function: `/netlify/functions/session-manager.js` - JWT creation/validation
+- Client auth: `/installation/auth-client.js` - Secure client-side wrapper
+- Event handlers: `/installation/event-handlers.js` - Event delegation (replaces inline onclick)
 - Pulse Reports endpoint: `GET /user-management-api/installer-check/:email`
 - Fails secure: If Pulse Reports is down, access is denied
+
+**XSS Prevention:**
+- All 45+ inline onclick handlers replaced with event delegation
+- Single event listener routes actions via data-action attributes
+- Eliminates major XSS attack vector
+- Enables stricter CSP (working toward removing 'unsafe-inline')
 
 ### Installer Database Schema
 ```
@@ -232,6 +252,7 @@ When making changes to `/installation/` in this repo, copy updated files back to
 ```
 RESEND_API_KEY=re_xxxxx (for email notifications)
 HUBSPOT_API_KEY=pat-xxxxx (Private App token for CRM integration)
+SESSION_SECRET=xxxxxx (64-char hex for JWT signing - generate with: openssl rand -hex 32)
 ```
 
 ## Security Headers (netlify.toml)
@@ -258,6 +279,14 @@ HUBSPOT_API_KEY=pat-xxxxx (Private App token for CRM integration)
 ## Recent Updates (Dec 2024 - Dec 2025)
 
 ### Dec 2025
+- **SECURITY HARDENING (Week 1 Critical Fixes)**
+  - HTTP-only cookie sessions replace localStorage (prevents XSS token theft)
+  - Server-side session validation on every page load
+  - Server-side admin role verification (prevents spoofing)
+  - Removed all 45+ inline onclick handlers (XSS prevention)
+  - Event delegation module for CSP compliance
+  - CSRF token infrastructure ready for server-side APIs
+  - New files: session-manager.js, auth-client.js, event-handlers.js
 - **Installer Portal - Calendar Sync** - .ics export and Google Calendar integration for installation scheduling
 - **Flexible project matching** - partial/contains matching for project names (handles API variations)
 - **API response fix** - nested project array extraction from DataJam Portal API
