@@ -308,9 +308,21 @@
                         const lowerUsername = username.toLowerCase();
                         const isAdmin = lowerUsername.endsWith('@data-jam.com') || lowerUsername === 'admin';
 
-                        // Store session - ensure projects is an array
-                        const projectsArray = Array.isArray(result.projects) ? result.projects : [];
-                        console.log('[LOGIN] Storing projects array:', projectsArray);
+                        // Extract projects array - handle nested structure from API
+                        // API returns {success: true, projects: Array} so we need result.projects.projects
+                        let projectsArray = [];
+                        if (Array.isArray(result.projects)) {
+                            projectsArray = result.projects;
+                        } else if (result.projects && Array.isArray(result.projects.projects)) {
+                            projectsArray = result.projects.projects;
+                        } else if (result.projects && typeof result.projects === 'object') {
+                            // Try to find any array in the response
+                            const possibleArrays = Object.values(result.projects).filter(v => Array.isArray(v));
+                            if (possibleArrays.length > 0) {
+                                projectsArray = possibleArrays[0];
+                            }
+                        }
+                        console.log('[LOGIN] Extracted projects array:', projectsArray);
 
                         const session = {
                             username: username,
