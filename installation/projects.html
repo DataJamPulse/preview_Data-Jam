@@ -476,10 +476,33 @@
                     ? `${project.firstInstall.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} - ${project.lastInstall.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`
                     : 'No dates';
 
-                // Check if logo file exists for this project
+                // Map project IDs to client logo files
                 const logoFiles = {
-                    'acms': 'acms.webp',
-                    // Add more logo files here as needed
+                    'acms': '../images/clients/acms-logo.jpeg',
+                    'limited-space': '../images/clients/limited-space-logo-white.webp',
+                    'smart-outdoor': '../images/clients/smart-outdoor-logo.png',
+                    'smart-outdoor-sdn': '../images/clients/smart-outdoor-logo.png',
+                    'atmosphere': '../images/clients/atmosphere-logo.png',
+                    'atmosphere-gyms': '../images/clients/atmosphere-logo.png',
+                    'atmosphere-pubs-bars': '../images/clients/atmosphere-logo.png',
+                    'tesco': '../images/clients/tesco-logo.png',
+                    'vendi-tech': '../images/clients/vendi-tech-logo.jpeg',
+                    'vendi-tech-testing': '../images/clients/vendi-tech-logo.jpeg',
+                    'eighteen24': '../images/clients/eighteen24-logo.jpg',
+                    'c-screens': '../images/clients/c-screens-logo.png',
+                    'capitol': '../images/clients/capitol-outdoor-logo.png',
+                    'heritage': '../images/clients/heritage-logo.png',
+                    'mercedes': '../images/clients/mercedes-logo.png',
+                    'scion': '../images/clients/scion-interactive-logo.png',
+                    'ocean': '../images/clients/ocean-outdoor-logo.jpg',
+                    'kbh': '../images/clients/kbh-logo.jpg',
+                    'ngm-gyms': '../images/clients/next-gen-media-logo.jpg',
+                    'ngm-universities': '../images/clients/next-gen-media-logo.jpg',
+                    'ngm-colleges': '../images/clients/next-gen-media-logo.jpg',
+                    'public-dallas': '../images/clients/publicart-white.png',
+                    'bauer': '../images/clients/bauer-media-outdoor-logo.png',
+                    'dunnhumby': '../images/clients/dunnhumby-logo.png',
+                    'gc-media': '../images/clients/gc-media-logo.png',
                 };
                 const logoFile = logoFiles[project.id.toLowerCase()];
 
