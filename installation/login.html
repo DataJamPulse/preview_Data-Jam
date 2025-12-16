@@ -246,17 +246,21 @@
         </div>
     </div>
 
+    <!-- Auth Client for secure cookie-based sessions -->
+    <script src="auth-client.js"></script>
+
     <script>
-        // Login Page Manager (DataJam Portal API)
+        // Login Page Manager (Secure Cookie-Based Auth v3.0)
         class LoginManager {
             constructor() {
                 this.init();
             }
 
-            init() {
-                // Check if already logged in
-                const session = this.getSession();
-                if (session && session.username) {
+            async init() {
+                // Check if already logged in via server-validated session
+                const authenticated = await AuthClient.init();
+                if (authenticated) {
+                    console.log('[LOGIN] Already authenticated, redirecting to dashboard');
                     window.location.href = 'dashboard.html';
                     return;
                 }
@@ -284,55 +288,12 @@
                 loginBtn.disabled = true;
 
                 try {
-                    // Encode credentials to Base64 for DataJam Portal API
-                    const auth = btoa(`${username}:${password}`);
+                    // Use AuthClient for secure login (sets HTTP-only cookie)
+                    const result = await AuthClient.login(username, password);
 
-                    // Call Netlify function to authenticate against DataJam Portal
-                    const response = await fetch('/.netlify/functions/installer-auth', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ auth })
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok && result.success) {
-                        // Debug: Log what the API returned
-                        console.log('[LOGIN] API response:', result);
-                        console.log('[LOGIN] Projects from API:', result.projects);
-
-                        // Determine role based on email domain or username
-                        // @data-jam.com users and 'admin' username get admin access (can see Inventory and Users)
-                        const lowerUsername = username.toLowerCase();
-                        const isAdmin = lowerUsername.endsWith('@data-jam.com') || lowerUsername === 'admin';
-
-                        // Extract projects array - handle nested structure from API
-                        // API returns {success: true, projects: Array} so we need result.projects.projects
-                        let projectsArray = [];
-                        if (Array.isArray(result.projects)) {
-                            projectsArray = result.projects;
-                        } else if (result.projects && Array.isArray(result.projects.projects)) {
-                            projectsArray = result.projects.projects;
-                        } else if (result.projects && typeof result.projects === 'object') {
-                            // Try to find any array in the response
-                            const possibleArrays = Object.values(result.projects).filter(v => Array.isArray(v));
-                            if (possibleArrays.length > 0) {
-                                projectsArray = possibleArrays[0];
-                            }
-                        }
-                        console.log('[LOGIN] Extracted projects array:', projectsArray);
-
-                        const session = {
-                            username: username,
-                            fullName: username,  // DataJam Portal doesn't return full name
-                            role: isAdmin ? 'admin' : 'installer',
-                            loginTime: new Date().toISOString(),
-                            projects: projectsArray
-                        };
-                        console.log('[LOGIN] Full session object:', session);
-                        localStorage.setItem('datajam_session', JSON.stringify(session));
+                    if (result.success) {
+                        console.log('[LOGIN] Success:', result.user.username, '(', result.user.role, ')');
+                        console.log('[LOGIN] Projects:', result.user.projects?.length || 0);
 
                         this.showSuccess('Login successful! Redirecting...');
                         setTimeout(() => {
@@ -344,19 +305,10 @@
                         loginBtn.disabled = false;
                     }
                 } catch (err) {
-                    console.error('Login error:', err);
+                    console.error('[LOGIN] Error:', err);
                     this.showError('Connection error. Please try again.');
                     loginBtn.textContent = originalText;
                     loginBtn.disabled = false;
-                }
-            }
-
-            getSession() {
-                const data = localStorage.getItem('datajam_session');
-                try {
-                    return data ? JSON.parse(data) : null;
-                } catch (e) {
-                    return null;
                 }
             }
 

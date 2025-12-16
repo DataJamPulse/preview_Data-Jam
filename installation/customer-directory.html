@@ -62,7 +62,7 @@
                         <div class="user-role" id="currentUserRole">Loading...</div>
                     </div>
                 </div>
-                <button class="logout-btn" onclick="SessionManager.logout()">
+                <button class="logout-btn" data-action="logout">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -201,7 +201,7 @@
                             </div>
                         </div>
                         <div class="customer-card-actions">
-                            <button class="btn-small btn-view" onclick="customerManager.viewCustomerDetails('${customer.name.replace(/'/g, "\\'")}')">View Locations</button>
+                            <button class="btn-small btn-view" data-action="view-customer-details" data-value="${customer.name.replace(/"/g, '&quot;')}">View Locations</button>
                         </div>
                     </div>
                 `;
@@ -226,7 +226,7 @@
                             </div>
                             <div class="location-address">${loc.address}</div>
                             ${loc.jamboxId ? `<div class="location-jambox">JamBox ID: ${loc.jamboxId}</div>` : ''}
-                            <button class="btn-small btn-view" onclick="window.location.href='installations.html'" style="margin-top: 8px;">View in Installations</button>
+                            <button class="btn-small btn-view" data-action="navigate" data-value="installations.html" style="margin-top: 8px;">View in Installations</button>
                         </div>
                     `;
                 }).join('');
@@ -253,7 +253,7 @@
                             </div>
                         </div>
                         <div class="modal-actions" style="margin-top: 32px;">
-                            <button class="btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+                            <button class="btn-primary" data-action="close-modal">Close</button>
                         </div>
                     </div>
                 `;
@@ -277,6 +277,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="supabase-client.js"></script>
+    <script src="auth-client.js"></script>
+    <script src="event-handlers.js"></script>
     <script src="app.js"></script>
     <script>
         // Populate user info in sidebar

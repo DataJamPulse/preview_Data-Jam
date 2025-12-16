@@ -1,9 +1,112 @@
 // Installer Authentication via DataJam Portal API
-// v2.0.0 - Added Pulse Reports access gate before DataJam API validation
-// Authenticates installer users against the DataJam Portal
-// BUT first checks Pulse Reports for installer_access permission
+// v3.0.0 - HTTP-only cookie sessions with JWT tokens
+// - Added Pulse Reports access gate before DataJam API validation
+// - JWT-based sessions stored in HTTP-only cookies (not localStorage)
+// - Server-side role determination (admin vs installer)
+// - CSRF token generation for form protection
 
 const https = require('https');
+const crypto = require('crypto');
+
+// ============================================
+// JWT & Session Configuration
+// ============================================
+const SESSION_CONFIG = {
+  COOKIE_NAME: 'dj_session',
+  EXPIRY_HOURS: 8,
+  COOKIE_PATH: '/installation/'
+};
+
+// Get session secret from environment variable
+function getSessionSecret() {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    console.error('[AUTH] WARNING: SESSION_SECRET not configured, using fallback');
+    return 'datajam-dev-secret-change-in-production-2024';
+  }
+  return secret;
+}
+
+// Base64URL encode (JWT-safe base64)
+function base64UrlEncode(str) {
+  return Buffer.from(str)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+// Create HMAC-SHA256 signature
+function createSignature(data, secret) {
+  return crypto
+    .createHmac('sha256', secret)
+    .update(data)
+    .digest('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+// Generate JWT token
+function createJWT(payload, secret) {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  const signature = createSignature(`${encodedHeader}.${encodedPayload}`, secret);
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
+// Generate CSRF token
+function generateCsrfToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Determine role server-side (cannot be spoofed)
+function determineRole(username) {
+  const lowerUsername = (username || '').toLowerCase();
+  if (lowerUsername.endsWith('@data-jam.com') || lowerUsername === 'admin') {
+    return 'admin';
+  }
+  return 'installer';
+}
+
+// Create HTTP-only session cookie
+function createSessionCookie(token, maxAge) {
+  const isProduction = process.env.NODE_ENV === 'production' ||
+                       process.env.CONTEXT === 'production' ||
+                       !process.env.NETLIFY_DEV;
+
+  const cookieOptions = [
+    `${SESSION_CONFIG.COOKIE_NAME}=${token}`,
+    `Path=${SESSION_CONFIG.COOKIE_PATH}`,
+    `Max-Age=${maxAge}`,
+    'HttpOnly',
+    'SameSite=Strict'
+  ];
+
+  if (isProduction) {
+    cookieOptions.push('Secure');
+  }
+
+  return cookieOptions.join('; ');
+}
+
+// Extract projects array from API response (handles nested structure)
+function extractProjects(apiResponse) {
+  if (Array.isArray(apiResponse)) {
+    return apiResponse;
+  }
+  if (apiResponse && Array.isArray(apiResponse.projects)) {
+    return apiResponse.projects;
+  }
+  if (apiResponse && typeof apiResponse === 'object') {
+    const possibleArrays = Object.values(apiResponse).filter(v => Array.isArray(v));
+    if (possibleArrays.length > 0) {
+      return possibleArrays[0];
+    }
+  }
+  return [];
+}
 
 // Pulse Reports API URL for installer access check
 const PULSE_REPORTS_API = 'https://datajamreports.com/.netlify/functions/user-management-api';
@@ -119,8 +222,9 @@ async function checkInstallerAccess(email) {
 
 /**
  * Validate credentials against DataJam Portal API
+ * On success: generates JWT and sets HTTP-only cookie
  */
-function validateDataJamCredentials(auth, corsHeaders, clientIP) {
+function validateDataJamCredentials(auth, corsHeaders, clientIP, username) {
   return new Promise((resolve) => {
     const options = {
       hostname: 'datajamportal.com',
@@ -160,21 +264,62 @@ function validateDataJamCredentials(auth, corsHeaders, clientIP) {
           // Successful authentication
           resetAttempts(clientIP);
 
-          // Parse response to get user info
-          let userProjects = [];
+          // Parse response to get user projects
+          let apiResponse = {};
           try {
-            userProjects = JSON.parse(data);
+            apiResponse = JSON.parse(data);
           } catch (e) {
-            userProjects = [];
+            apiResponse = {};
           }
+
+          // Extract projects array (handles nested structure)
+          const projects = extractProjects(apiResponse);
+
+          // Determine role server-side (CRITICAL: cannot be spoofed)
+          const role = determineRole(username);
+
+          // Generate CSRF token for form protection
+          const csrfToken = generateCsrfToken();
+
+          // Calculate expiry
+          const expiryMs = SESSION_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000;
+          const maxAgeSeconds = SESSION_CONFIG.EXPIRY_HOURS * 60 * 60;
+
+          // Create JWT payload with all session data
+          const jwtPayload = {
+            sub: username,
+            role: role,
+            projects: projects,
+            csrf: csrfToken,
+            iat: Date.now(),
+            exp: Date.now() + expiryMs
+          };
+
+          // Generate signed JWT token
+          const secret = getSessionSecret();
+          const token = createJWT(jwtPayload, secret);
+
+          // Create HTTP-only cookie
+          const sessionCookie = createSessionCookie(token, maxAgeSeconds);
+
+          console.log(`[AUTH] Session created for ${username} (role: ${role}, projects: ${projects.length})`);
 
           resolve({
             statusCode: 200,
-            headers: corsHeaders,
+            headers: {
+              ...corsHeaders,
+              'Set-Cookie': sessionCookie
+            },
             body: JSON.stringify({
               success: true,
               message: 'Authentication successful',
-              projects: userProjects
+              user: {
+                username: username,
+                role: role,
+                projects: projects
+              },
+              csrfToken: csrfToken,
+              expiresAt: new Date(Date.now() + expiryMs).toISOString()
             })
           });
         } else if (res.statusCode === 401 || res.statusCode === 403) {
@@ -203,7 +348,7 @@ function validateDataJamCredentials(auth, corsHeaders, clientIP) {
 
     req.on('error', (error) => {
       clearTimeout(timeout);
-      console.error('[INSTALLER-AUTH] DataJam connection error:', error.message);
+      console.error('[AUTH] DataJam connection error:', error.message);
       resolve({
         statusCode: 500,
         headers: corsHeaders,
@@ -333,8 +478,8 @@ exports.handler = async function(event, context) {
     // GATE 2: Validate credentials against DataJam Portal API
     // Only reached if Pulse Reports access is granted
     // ============================================
-    console.log(`[INSTALLER-AUTH] Access GRANTED, validating credentials against DataJam Portal`);
-    return await validateDataJamCredentials(auth, corsHeaders, clientIP);
+    console.log(`[AUTH] Access GRANTED for ${email}, validating credentials against DataJam Portal`);
+    return await validateDataJamCredentials(auth, corsHeaders, clientIP, email);
 
   } catch (error) {
     console.error('[INSTALLER-AUTH] Error:', error.message);

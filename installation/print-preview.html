@@ -158,8 +158,8 @@
 </head>
 <body style="background: #f5f5f5;">
     <div class="print-actions">
-        <button class="btn-print" onclick="window.print()">🖨️ Print Report</button>
-        <button class="btn-back" onclick="window.close()">← Back</button>
+        <button class="btn-print" data-action="print">🖨️ Print Report</button>
+        <button class="btn-back" data-action="close-window">← Back</button>
     </div>
 
     <div class="print-container" id="printContent">
@@ -170,6 +170,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="supabase-client.js"></script>
+    <script src="auth-client.js"></script>
+    <script src="event-handlers.js"></script>
     <script src="app.js"></script>
     <script>
         // Load installation data from URL parameter
