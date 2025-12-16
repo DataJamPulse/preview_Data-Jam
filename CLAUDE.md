@@ -162,7 +162,7 @@ Contact Form → Supabase (website_leads) → Netlify Function → Email + HubSp
 - **Auth Function:** `/netlify/functions/installer-auth.js` - validates against datajamportal.com
 - **Backend:** Supabase PostgreSQL with installer_* tables (for data storage only)
 - **Storage:** Supabase Storage bucket `installer-photos` for installation photos
-- **Features:** Dashboard, new install form, view/edit/delete installs, inventory management, shipments, projects, user management, settings
+- **Features:** Dashboard, new install form, view/edit/delete installs, inventory management, shipments, projects, user management, settings, calendar view with .ics export and Google Calendar sync
 - **Offline:** Sync queue for offline operation (Alex works in basements with poor signal)
 - **Note:** Page has `noindex` meta tag - not for public/SEO
 - **Design:** Premium dark theme with Abeat font, floating particles, noise texture
@@ -196,8 +196,10 @@ User Login → Extract email from auth
 - Installations view filters to only show installations for authorized projects
 - Shipment destination dropdown uses authorized projects
 - All dropdowns have "Other (Manual Entry)" fallback for flexibility
-- SessionManager methods: `getProjects()`, `getProjectNames()`, `hasProjectAccess()`
-- If no authorized projects in session, all projects shown (backwards compatibility)
+- SessionManager methods: `getProjects()`, `getProjectNames()`, `hasProjectAccess()`, `isAdmin()`
+- **Flexible matching:** partial/contains matching for project names (e.g., "Public" matches "Dallas - Public")
+- **Admin-only pages:** Inventory and Users restricted to @data-jam.com emails or 'admin' username
+- API response handling: extracts nested `result.projects.projects` array from DataJam Portal
 
 **Technical:**
 - Auth function: `/netlify/functions/installer-auth.js` v2.0.0
@@ -256,6 +258,11 @@ HUBSPOT_API_KEY=pat-xxxxx (Private App token for CRM integration)
 ## Recent Updates (Dec 2024 - Dec 2025)
 
 ### Dec 2025
+- **Installer Portal - Calendar Sync** - .ics export and Google Calendar integration for installation scheduling
+- **Flexible project matching** - partial/contains matching for project names (handles API variations)
+- **API response fix** - nested project array extraction from DataJam Portal API
+- **Client logos sync** - 19 logos in homepage marquee (added c-screens, dunnhumby, gc-media, publicart-white, tesco, vendi-tech)
+- **Admin-only access control** - Inventory and Users pages restricted to @data-jam.com emails and 'admin' username
 - **Installer Portal - Project Access Control** - users only see projects they're authorized for
 - **Two-gate installer auth** - Pulse Reports access check → DataJam Portal validation
 - **Installer nav link** - "Installer" added to main site navigation on all pages

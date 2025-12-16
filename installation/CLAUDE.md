@@ -11,23 +11,39 @@
 
 ## Recent Updates
 
-**2025-12-16 - Access Control Improvements & Project Logos:**
+**2025-12-16 - Access Control, Calendar Sync & API Fixes:**
 - ✅ **STRICT PROJECT FILTERING FOR NON-ADMINS**
   - Admins see ALL projects and installations
   - Non-admins ONLY see projects they are authorized for (from DataJam Portal API)
   - Non-admins with no authorized projects see NOTHING (empty list)
   - Fixed: Previously showed all if no authorized projects
   - Dashboard stats, installations, and projects pages all filter correctly
+- ✅ **FLEXIBLE PROJECT NAME MATCHING**
+  - Project access now uses partial/contains matching (not exact match)
+  - "Dallas - Public" matches "Public" or "Dallas" from API
+  - Case-insensitive comparison for better reliability
+  - hasProjectAccess() method updated in SessionManager
+- ✅ **CALENDAR SYNC FEATURE**
+  - Added .ics file export for calendar apps (Apple Calendar, Outlook)
+  - Added Google Calendar integration (opens pre-filled event in new tab)
+  - Calendar sync buttons in calendar view header
+  - exportToICS() method generates downloadable .ics file
+  - addToGoogleCalendar() method creates Google Calendar URL
 - ✅ **PROJECT CARD LOGOS**
   - 25+ projects mapped to client logos (Limited Space, Smart Outdoor, Tesco, etc.)
   - Logos stored in `/images/clients/` folder
   - Projects without logos show gradient initials as fallback
+  - Synced 19 logos from datajamreports-production folder
 - ✅ **UI POLISH**
   - Clear All Data button restyled to btn-secondary with trash icon
   - Double confirmation dialog already in place
 - ✅ **BUG FIXES**
   - Fixed `projects.map is not a function` error with Array.isArray() checks
   - Fixed duplicate `inventoryManager` declaration in inventory.html
+  - Fixed nested API response parsing for user projects
+    - API returns `{success: true, projects: Array}` nested structure
+    - login.html now extracts `result.projects.projects` correctly
+    - Handles various response formats with fallback logic
 
 **2025-12-15 - DataJam Portal Authentication & Project Access Control:**
 - ✅ **LOGIN NOW USES DATAJAM PORTAL CREDENTIALS**
@@ -671,11 +687,39 @@ start index.html
 
 ---
 
-**Last Updated:** 2025-12-12 (Session 3: Multi-user login, project tracking, low stock alerts, calendar view)
+**Last Updated:** 2025-12-16 (Calendar sync, flexible project matching, API response fix)
 **Document Owner:** Claude (AI Assistant)
 **Human Contact:** Alex (installer) & Rhea (management)
 
 ## Change Log
+
+**2025-12-16 - Calendar Sync, Flexible Matching & API Fixes:**
+- **CALENDAR SYNC FEATURE:**
+  - Added calendar export buttons to calendar view header
+  - exportToICS() method in InstallationListManager:
+    - Generates .ics file with all installations for the current month
+    - Downloads as DataJam-Installations-[Month]-[Year].ics
+    - Includes venue name, address, JamBox ID, status in event description
+  - addToGoogleCalendar() method:
+    - Opens Google Calendar with pre-filled event for selected installation
+    - URL-encodes all parameters for safe transmission
+  - CSS: Added .calendar-export styles for button group
+- **FLEXIBLE PROJECT NAME MATCHING:**
+  - Updated hasProjectAccess() in SessionManager
+  - Previous: exact match only (case-insensitive)
+  - New: partial/contains matching for project names
+  - Example: authorized for "Public" matches "Dallas - Public"
+  - Handles API variations like "Dallas - Public" vs "Public"
+- **NESTED API RESPONSE FIX:**
+  - DataJam Portal API returns: `result.projects = {success: true, projects: Array}`
+  - Previous code expected: `result.projects` to be the array directly
+  - Fixed login.html to extract `result.projects.projects`
+  - Added fallback logic to find arrays in various response formats
+  - Console logging updated: `[LOGIN] Extracted projects array:`
+- **CLIENT LOGOS SYNC:**
+  - Synced 6 new logos from datajamreports-production folder
+  - Added: c-screens, dunnhumby, gc-media, publicart-white, tesco, vendi-tech
+  - Total: 19 client logos in homepage marquee
 
 **2025-12-12 - Multi-User System & UX Enhancements (Session 3):**
 - **MULTI-USER LOGIN SYSTEM:**
