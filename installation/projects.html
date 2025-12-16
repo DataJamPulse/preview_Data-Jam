@@ -374,12 +374,21 @@
                     console.log('[PROJECTS] Admin user - showing all', allProjects.length, 'projects');
                 } else if (authorizedProjectNames.length > 0) {
                     // Non-admin with authorized projects - show only those
-                    filteredProjects = allProjects.filter(project =>
-                        authorizedProjectNames.some(authName =>
-                            authName.toLowerCase() === project.name.toLowerCase() ||
-                            authName.toLowerCase() === project.id.toLowerCase()
-                        )
-                    );
+                    // Use flexible matching: exact, contains, or partial match
+                    filteredProjects = allProjects.filter(project => {
+                        const projectNameLower = project.name.toLowerCase();
+                        const projectIdLower = project.id.toLowerCase();
+                        return authorizedProjectNames.some(authName => {
+                            const authLower = authName.toLowerCase();
+                            // Exact match
+                            if (authLower === projectNameLower || authLower === projectIdLower) return true;
+                            // API name contains our project name or vice versa
+                            if (authLower.includes(projectNameLower) || projectNameLower.includes(authLower)) return true;
+                            // Check ID too
+                            if (authLower.includes(projectIdLower) || projectIdLower.includes(authLower)) return true;
+                            return false;
+                        });
+                    });
                     console.log('[PROJECTS] Filtered to', filteredProjects.length, 'authorized projects');
                 } else {
                     // Non-admin with no authorized projects - show nothing

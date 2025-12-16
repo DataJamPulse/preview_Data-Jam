@@ -86,9 +86,16 @@ const SessionManager = {
         const authorizedNames = this.getProjectNames();
         // Non-admin with no authorized projects = no access
         if (authorizedNames.length === 0) return false;
-        return authorizedNames.some(name =>
-            name.toLowerCase() === projectName.toLowerCase()
-        );
+        // Flexible matching: exact, contains, or partial match
+        const projectLower = projectName.toLowerCase();
+        return authorizedNames.some(name => {
+            const authLower = name.toLowerCase();
+            // Exact match
+            if (authLower === projectLower) return true;
+            // Partial match (API name contains project or vice versa)
+            if (authLower.includes(projectLower) || projectLower.includes(authLower)) return true;
+            return false;
+        });
     }
 };
 
@@ -767,6 +774,25 @@ class InstallationListManager {
                     <button class="calendar-nav-btn" onclick="listManager.changeMonth(1)">Next →</button>
                 </div>
                 <div class="calendar-title">${monthNames[month]} ${year}</div>
+                <div class="calendar-export">
+                    <button class="btn-secondary btn-small" onclick="listManager.exportToICS()" title="Download .ics file">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Export .ics
+                    </button>
+                    <button class="btn-secondary btn-small" onclick="listManager.addToGoogleCalendar()" title="Add to Google Calendar">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        Google Calendar
+                    </button>
+                </div>
             </div>
             <div class="calendar-grid">
                 <div class="calendar-day-header">Sun</div>
@@ -827,6 +853,115 @@ class InstallationListManager {
         document.getElementById('searchInput').value = dateStr;
         this.searchQuery = dateStr;
         this.renderInstallations();
+    }
+
+    // Export installations to .ics calendar file
+    exportToICS() {
+        const installations = this.installations.filter(i => i.installDate);
+        if (installations.length === 0) {
+            alert('No installations with dates to export.');
+            return;
+        }
+
+        let icsContent = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//DataJam//Install Tracker//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH'
+        ];
+
+        installations.forEach(install => {
+            const date = install.installDate.replace(/-/g, '');
+            const time = install.installTime ? install.installTime.replace(':', '') + '00' : '090000';
+            const endTime = install.installTime ?
+                (parseInt(install.installTime.split(':')[0]) + 2).toString().padStart(2, '0') + install.installTime.split(':')[1] + '00'
+                : '110000';
+
+            const summary = `JamBox Install: ${install.clientName || 'Unknown Venue'}`;
+            const location = install.installAddress ? install.installAddress.replace(/\n/g, ', ') : '';
+            const description = [
+                install.projectName ? `Project: ${install.projectName}` : '',
+                install.jamboxId ? `JamBox ID: ${install.jamboxId}` : '',
+                install.status ? `Status: ${install.status}` : '',
+                install.notes ? `Notes: ${install.notes}` : ''
+            ].filter(Boolean).join('\\n');
+
+            icsContent.push(
+                'BEGIN:VEVENT',
+                `DTSTART:${date}T${time}`,
+                `DTEND:${date}T${endTime}`,
+                `SUMMARY:${summary}`,
+                location ? `LOCATION:${location}` : '',
+                `DESCRIPTION:${description}`,
+                `UID:${install.id}@datajam-installs`,
+                'END:VEVENT'
+            );
+        });
+
+        icsContent.push('END:VCALENDAR');
+
+        // Filter empty lines and join
+        const icsString = icsContent.filter(line => line).join('\r\n');
+
+        // Download file
+        const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `datajam-installations-${new Date().toISOString().split('T')[0]}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // Add installations to Google Calendar
+    addToGoogleCalendar() {
+        const installations = this.installations.filter(i => i.installDate);
+        if (installations.length === 0) {
+            alert('No installations with dates to add.');
+            return;
+        }
+
+        if (installations.length === 1) {
+            // Single event - open directly
+            this.openGoogleCalendarEvent(installations[0]);
+        } else {
+            // Multiple events - show selection or add first one
+            const choice = confirm(`You have ${installations.length} installations. Click OK to add the most recent one, or Cancel to export all as .ics file instead.`);
+            if (choice) {
+                // Sort by date descending and take first
+                const sorted = [...installations].sort((a, b) =>
+                    new Date(b.installDate) - new Date(a.installDate)
+                );
+                this.openGoogleCalendarEvent(sorted[0]);
+            } else {
+                this.exportToICS();
+            }
+        }
+    }
+
+    openGoogleCalendarEvent(install) {
+        const title = encodeURIComponent(`JamBox Install: ${install.clientName || 'Unknown Venue'}`);
+        const date = install.installDate.replace(/-/g, '');
+        const time = install.installTime ? install.installTime.replace(':', '') + '00' : '090000';
+        const endTime = install.installTime ?
+            (parseInt(install.installTime.split(':')[0]) + 2).toString().padStart(2, '0') + install.installTime.split(':')[1] + '00'
+            : '110000';
+
+        const details = encodeURIComponent([
+            install.projectName ? `Project: ${install.projectName}` : '',
+            install.jamboxId ? `JamBox ID: ${install.jamboxId}` : '',
+            install.status ? `Status: ${install.status}` : '',
+            install.notes ? `Notes: ${install.notes}` : ''
+        ].filter(Boolean).join('\n'));
+
+        const location = encodeURIComponent(install.installAddress ? install.installAddress.replace(/\n/g, ', ') : '');
+
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${date}T${time}/${date}T${endTime}&details=${details}&location=${location}`;
+
+        window.open(url, '_blank');
     }
 
     setupEventListeners() {

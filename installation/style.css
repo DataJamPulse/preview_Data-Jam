@@ -1683,6 +1683,23 @@ footer {
     border-color: var(--datajam-pink);
 }
 
+.calendar-export {
+    display: flex;
+    gap: 8px;
+}
+
+.calendar-export .btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
 .calendar-title {
     font-size: 20px;
     font-weight: 500;
