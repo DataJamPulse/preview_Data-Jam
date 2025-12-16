@@ -8,7 +8,7 @@ const crypto = require('crypto');
 const SESSION_CONFIG = {
   COOKIE_NAME: 'dj_session',
   EXPIRY_HOURS: 8,
-  COOKIE_PATH: '/installation/'
+  COOKIE_PATH: '/'  // Must be / to include /.netlify/functions/ paths
 };
 
 // Get session secret from environment variable
