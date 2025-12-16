@@ -40,7 +40,7 @@
                     </svg>
                     View Installs
                 </a>
-                <a href="inventory.html" class="admin-only">
+                <a href="inventory.html">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="7" width="20" height="14" rx="2"/>
                         <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
@@ -56,7 +56,7 @@
                     </svg>
                     Projects
                 </a>
-                <a href="users.html" class="admin-only">
+                <a href="users.html">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -86,7 +86,7 @@
                         <div class="user-role" id="currentUserRole">Loading...</div>
                     </div>
                 </div>
-                <button class="logout-btn" data-action="logout">
+                <button class="logout-btn" onclick="SessionManager.logout()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -104,7 +104,7 @@
                     <p class="subtitle">View and manage all installation records</p>
                 </div>
                 <div class="view-toggle" style="display: flex; gap: 8px; background: var(--bg-secondary); padding: 4px; border-radius: 8px;">
-                    <button class="view-btn active" data-view="grid" data-action="switch-view" data-value="grid">
+                    <button class="view-btn active" data-view="grid" onclick="listManager.switchView('grid')">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="7" height="7"/>
                             <rect x="14" y="3" width="7" height="7"/>
@@ -113,7 +113,7 @@
                         </svg>
                         Grid
                     </button>
-                    <button class="view-btn" data-view="calendar" data-action="switch-view" data-value="calendar">
+                    <button class="view-btn" data-view="calendar" onclick="listManager.switchView('calendar')">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                             <line x1="16" y1="2" x2="16" y2="6"/>
@@ -160,11 +160,7 @@
                 <p style="color: var(--text-secondary); margin-bottom: 20px; font-weight: 300;">
                     Export your installation data as JSON or CSV, or clear all records from local storage.
                 </p>
-                <button id="clearAllBtn" class="btn-secondary" style="color: var(--datajam-pink); border-color: var(--datajam-pink);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
+                <button id="clearAllBtn" class="btn-delete" style="padding: 12px 24px; border-radius: 8px; font-weight: 500;">
                     Clear All Data
                 </button>
             </div>
@@ -175,8 +171,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="supabase-client.js"></script>
-    <script src="auth-client.js"></script>
-    <script src="event-handlers.js"></script>
     <script src="app.js"></script>
     <script>
         // Populate user info in sidebar
@@ -190,13 +184,6 @@
             if (userRoleEl && SessionManager) {
                 const role = SessionManager.getUserRole() || 'user';
                 userRoleEl.textContent = role;
-            }
-
-            // Hide admin-only elements for non-admins
-            if (SessionManager && !SessionManager.isAdmin()) {
-                document.querySelectorAll('.admin-only').forEach(el => {
-                    el.style.display = 'none';
-                });
             }
         });
     </script>

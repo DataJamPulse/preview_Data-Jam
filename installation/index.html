@@ -39,7 +39,7 @@
                     </svg>
                     View Installs
                 </a>
-                <a href="inventory.html" class="admin-only">
+                <a href="inventory.html">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="7" width="20" height="14" rx="2"/>
                         <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
@@ -55,7 +55,7 @@
                     </svg>
                     Projects
                 </a>
-                <a href="users.html" class="admin-only">
+                <a href="users.html">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -85,7 +85,7 @@
                         <div class="user-role" id="currentUserRole">Loading...</div>
                     </div>
                 </div>
-                <button class="logout-btn" data-action="logout">
+                <button class="logout-btn" onclick="SessionManager.logout()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -129,11 +129,183 @@
                     <h2>Location Details</h2>
 
                     <div class="form-group">
-                        <label for="projectName">Project *</label>
-                        <select id="projectName" name="projectName" required>
-                            <option value="">Loading projects...</option>
+                        <label for="projectName">Project</label>
+                        <select id="projectName" name="projectName">
+                            <option value="">Select project...</option>
+
+                            <optgroup label="Shopping Centers & Malls">
+                                <option value="the-mall-wood-green">The Mall Wood Green</option>
+                                <option value="the-mall-luton">The Mall Luton</option>
+                                <option value="market-place-bolton">Market Place Bolton</option>
+                                <option value="festival-place">Festival Place</option>
+                                <option value="manchester-arndale">Manchester Arndale</option>
+                                <option value="bullring">Bullring</option>
+                                <option value="eldon-square">Eldon Square</option>
+                                <option value="bluewater">Bluewater</option>
+                                <option value="metrocentre">Metrocentre</option>
+                                <option value="walthamstow">Walthamstow</option>
+                                <option value="east-kilbride">East Kilbride</option>
+                                <option value="vanguada-mall">Vanguada Mall</option>
+                                <option value="shopping-centre">Shopping Centre</option>
+                                <option value="malls-media-and-more">Malls Media And More</option>
+                                <option value="the-grove">The Grove</option>
+                                <option value="americana">Americana</option>
+                                <option value="pacific-palisades">Pacific Palisades</option>
+                                <option value="the-commons">The Commons</option>
+                            </optgroup>
+
+                            <optgroup label="Outdoor Media">
+                                <option value="limited-space">Limited Space</option>
+                                <option value="smart-outdoor">Smart Outdoor</option>
+                                <option value="smart-outdoor-sdn">Smart Outdoor (SDN)</option>
+                                <option value="big-outdoor">Big Outdoor</option>
+                                <option value="dream-outdoor">Dream Outdoor</option>
+                                <option value="ocean">Ocean</option>
+                                <option value="mass-media-pedestrian">Mass Media - Pedestrian</option>
+                                <option value="mass-media-roadside">Mass Media - Roadside</option>
+                                <option value="open-media">Open Media</option>
+                                <option value="i-media">i-media</option>
+                            </optgroup>
+
+                            <optgroup label="Gyms & Fitness">
+                                <option value="ngm-gyms">NGM Gyms</option>
+                                <option value="nrg-gyms">NRG Gyms</option>
+                                <option value="fitness-first">Fitness First</option>
+                                <option value="atmosphere-gyms">Atmosphere Gyms</option>
+                                <option value="gym-tv">Gym TV</option>
+                            </optgroup>
+
+                            <optgroup label="Pubs, Bars & Nightlife">
+                                <option value="pubs">Pubs</option>
+                                <option value="nightlife">Nightlife</option>
+                                <option value="marstons">Marstons</option>
+                                <option value="atmosphere-pubs-bars">Atmosphere Pubs & Bars</option>
+                                <option value="ministry">Ministry</option>
+                            </optgroup>
+
+                            <optgroup label="Sports & Golf">
+                                <option value="golf-fang">Golf Fang</option>
+                                <option value="golf-clubs-sr">Golf Clubs S.R</option>
+                                <option value="golf-gcm">Golf (G.C.M)</option>
+                                <option value="team-sports">Team Sports</option>
+                                <option value="goals-d6">Goals D6</option>
+                                <option value="goals-tv">Goals TV</option>
+                                <option value="stadium-centre">Stadium Centre</option>
+                            </optgroup>
+
+                            <optgroup label="Universities & Colleges">
+                                <option value="ngm-universities">NGM Universities</option>
+                                <option value="ngm-colleges">NGM Colleges</option>
+                                <option value="u-centre-on-college">U Centre on College</option>
+                            </optgroup>
+
+                            <optgroup label="Leisure & Entertainment">
+                                <option value="thistles-sc">Thistles SC</option>
+                                <option value="the-beacon-centre">The Beacon Centre</option>
+                                <option value="the-exchange-ilford-sc">The Exchange Ilford SC</option>
+                                <option value="the-liberty-romford">The Liberty Romford</option>
+                                <option value="kingfisher">Kingfisher</option>
+                                <option value="jackson-square">Jackson Square</option>
+                                <option value="dolphin-centre-poole">Dolphin Centre Poole</option>
+                                <option value="leisure-centre-d6">Leisure Centre D6</option>
+                                <option value="cinema">Cinema</option>
+                                <option value="rock-box">Rock Box</option>
+                            </optgroup>
+
+                            <optgroup label="Retail">
+                                <option value="tesco">Tesco</option>
+                                <option value="17-central">17&Central</option>
+                                <option value="eastgate">Eastgate</option>
+                            </optgroup>
+
+                            <optgroup label="Transport & Travel">
+                                <option value="travel-units">Travel Units</option>
+                                <option value="le-shuttle">Le Shuttle</option>
+                                <option value="moto-service-stations">MOTO Service Stations</option>
+                                <option value="mfg">MFG</option>
+                                <option value="la-bus">LA Bus</option>
+                            </optgroup>
+
+                            <optgroup label="Technology & Digital">
+                                <option value="vendi-tech">Vendi Tech</option>
+                                <option value="vendi-tech-testing">Vendi Tech - Testing</option>
+                                <option value="kiosks">Kiosks</option>
+                                <option value="seamless-digital">Seamless Digital</option>
+                                <option value="smart-digi">Smart Digi</option>
+                                <option value="dci-media">DCI Media</option>
+                                <option value="instore-technology">Instore Technology</option>
+                            </optgroup>
+
+                            <optgroup label="Media Companies">
+                                <option value="red-tail-creative-media">Red Tail Creative Media</option>
+                                <option value="lucid">Lucid</option>
+                                <option value="75-media">75 Media</option>
+                                <option value="ad-board">Ad Board</option>
+                                <option value="ad-fuze">Ad Fuze</option>
+                                <option value="clearview-media-trial">Clearview Media Trial</option>
+                                <option value="native">Native</option>
+                                <option value="eighteen24">Eighteen24</option>
+                                <option value="gpm360">GPM360</option>
+                                <option value="tnt">TNT</option>
+                                <option value="promo-group">Promo Group</option>
+                                <option value="capitol">Capitol</option>
+                                <option value="new-tradition">New Tradition</option>
+                            </optgroup>
+
+                            <optgroup label="Office & Commercial">
+                                <option value="office">Office</option>
+                                <option value="reception-others">Reception + Others</option>
+                                <option value="in-home-media">In Home Media</option>
+                            </optgroup>
+
+                            <optgroup label="Specific Locations">
+                                <option value="arran-encino">Arran Encino</option>
+                                <option value="the-royal-exchange-tunbridge-wells">The Royal Exchange Tunbridge Wells</option>
+                                <option value="peninsular-place">Peninsular Place</option>
+                                <option value="the-block-austin">The Block – Austin</option>
+                                <option value="5-twenty-four-five">5 Twenty Four & 5 Twenty Five Angliana</option>
+                                <option value="mercedes">Mercedes</option>
+                                <option value="scion">Scion</option>
+                                <option value="atmosphere">Atmosphere</option>
+                                <option value="public-dallas">Public - Dallas</option>
+                                <option value="c-screens">C Screens</option>
+                            </optgroup>
+
+                            <optgroup label="Other Networks">
+                                <option value="rechargy">Rechargy</option>
+                                <option value="heritage">Heritage</option>
+                            </optgroup>
+
+                            <optgroup label="Testing & Development">
+                                <option value="dj-dev-test">DJ Dev Test</option>
+                                <option value="project-test">projectTest</option>
+                                <option value="lab-test-devices">Lab Test Devices</option>
+                                <option value="test22">test22</option>
+                                <option value="europe-test">europe_test</option>
+                                <option value="enterprise-testing">Enterprise Testing</option>
+                                <option value="ota-testing-dj">OTA TESTING DJ</option>
+                                <option value="custom-build-sandbox">Custom Build SandBox</option>
+                                <option value="derby-trial-units">Derby Trial Units</option>
+                                <option value="sawtry-demo">Sawtry Demo</option>
+                                <option value="velocity-test-units">Velocity Test Units</option>
+                                <option value="clear-channel-ota-test-units">Clear Channel OTA Test Units</option>
+                                <option value="clear-channel-ota-test-unit-2">Clear Channel OTA Test Unit 2</option>
+                                <option value="clear-channel-ota-test-unit-3">Clear Channel OTA Test Unit 3</option>
+                                <option value="clear-channel-ota-test-unit-4">Clear Channel OTA Test Unit 4</option>
+                                <option value="clear-channel-ota-test-unit-5">Clear Channel OTA Test Unit 5</option>
+                                <option value="route-demo-unit">ROUTE DEMO UNIT</option>
+                                <option value="uclansu-trial">Uclansu Trial</option>
+                                <option value="alex-testing">alex testing</option>
+                                <option value="test">TEST</option>
+                            </optgroup>
+
+                            <optgroup label="Internal Projects">
+                                <option value="acms">ACMS</option>
+                                <option value="data-jam">Data Jam</option>
+                                <option value="acc">ACC</option>
+                            </optgroup>
                         </select>
-                        <small>Projects you have access to in DataJam Portal</small>
+                        <small>Select the project this installation belongs to (from DataJam Portal)</small>
                     </div>
 
                     <div class="form-group">
@@ -274,13 +446,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="supabase-client.js"></script>
-    <script src="auth-client.js"></script>
-    <script src="event-handlers.js"></script>
     <script src="app.js"></script>
     <script>
         console.log('[INDEX] Page loaded');
 
-        // Populate user info in sidebar and project dropdown
+        // Populate user info in sidebar
         document.addEventListener('DOMContentLoaded', () => {
             console.log('[INDEX] DOMContentLoaded fired');
             const userNameEl = document.getElementById('currentUserName');
@@ -292,76 +462,6 @@
             if (userRoleEl && SessionManager) {
                 const role = SessionManager.getUserRole() || 'user';
                 userRoleEl.textContent = role;
-            }
-
-            // Hide admin-only elements for non-admins
-            if (SessionManager && !SessionManager.isAdmin()) {
-                document.querySelectorAll('.admin-only').forEach(el => {
-                    el.style.display = 'none';
-                });
-            }
-
-            // Populate project dropdown from authorized projects
-            const projectSelect = document.getElementById('projectName');
-            if (projectSelect && SessionManager) {
-                const projects = SessionManager.getProjects();
-                console.log('[INDEX] Authorized projects:', projects);
-
-                // Clear and rebuild dropdown
-                projectSelect.innerHTML = '<option value="">Select project...</option>';
-
-                if (projects && projects.length > 0) {
-                    // Add authorized projects
-                    projects.forEach(proj => {
-                        const name = proj.project_name || proj.ProjectName || proj.name;
-                        if (name) {
-                            const option = document.createElement('option');
-                            option.value = name;
-                            option.textContent = name;
-                            projectSelect.appendChild(option);
-                        }
-                    });
-
-                    // Add separator and manual entry option
-                    const separator = document.createElement('option');
-                    separator.disabled = true;
-                    separator.textContent = '───────────────';
-                    projectSelect.appendChild(separator);
-
-                    const otherOption = document.createElement('option');
-                    otherOption.value = '__other__';
-                    otherOption.textContent = 'Other (Manual Entry)';
-                    projectSelect.appendChild(otherOption);
-                } else {
-                    // No projects - show message and allow manual entry
-                    projectSelect.innerHTML = `
-                        <option value="">No authorized projects</option>
-                        <option value="__other__">Enter project manually...</option>
-                    `;
-                    console.warn('[INDEX] No authorized projects found in session');
-                }
-
-                // Handle "Other" selection - show text input
-                projectSelect.addEventListener('change', function() {
-                    let customInput = document.getElementById('customProjectName');
-                    if (this.value === '__other__') {
-                        if (!customInput) {
-                            customInput = document.createElement('input');
-                            customInput.type = 'text';
-                            customInput.id = 'customProjectName';
-                            customInput.name = 'customProjectName';
-                            customInput.placeholder = 'Enter project name...';
-                            customInput.className = 'form-control';
-                            customInput.style.marginTop = '8px';
-                            this.parentNode.appendChild(customInput);
-                        }
-                        customInput.style.display = 'block';
-                        customInput.required = true;
-                    } else if (customInput) {
-                        customInput.style.display = 'none';
-                        customInput.required = false;
-                    }
-                });
             }
         });
     </script>

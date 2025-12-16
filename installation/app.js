@@ -1,74 +1,28 @@
 // ========================================
 // SESSION MANAGEMENT & AUTHENTICATION
-// v3.0 - Server-validated sessions via AuthClient
 // ========================================
+console.log('[APP.JS] Loading, pathname:', window.location.pathname);
 
-/**
- * SessionManager - Wrapper for backward compatibility
- * All authentication is now handled by AuthClient (auth-client.js)
- * which uses HTTP-only cookies and server-side validation.
- *
- * SECURITY: Session data is validated server-side on every page load.
- * Role and project access cannot be spoofed via browser DevTools.
- */
 const SessionManager = {
-    // Internal cache (populated by AuthClient)
-    _initialized: false,
-
-    // Initialize session via server validation
-    async init() {
-        if (this._initialized) return;
-        if (typeof AuthClient !== 'undefined') {
-            await AuthClient.init();
-            this._initialized = true;
-        }
-    },
-
-    // Get session data (from AuthClient memory, NOT localStorage)
     getSession() {
-        if (typeof AuthClient !== 'undefined' && AuthClient.isAuthenticated()) {
-            const user = AuthClient.getUser();
-            return {
-                username: user.username,
-                fullName: user.username,
-                role: user.role,
-                projects: user.projects || []
-            };
-        }
-        // Fallback to localStorage for backward compatibility during transition
         try {
             const data = localStorage.getItem('datajam_session');
-            if (data) {
-                console.warn('[SessionManager] Using legacy localStorage session - please re-login');
-                return JSON.parse(data);
-            }
-        } catch (e) {}
-        return null;
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.error('[Session] Error parsing session:', e);
+            return null;
+        }
     },
 
     isAuthenticated() {
-        if (typeof AuthClient !== 'undefined') {
-            return AuthClient.isAuthenticated();
-        }
         return this.getSession() !== null;
     },
 
-    // Async version that validates with server
-    async requireAuth() {
-        if (typeof AuthClient !== 'undefined') {
-            return await AuthClient.requireAuth();
-        }
-        // Fallback for pages without auth-client.js
-        if (!this.isAuthenticated()) {
-            window.location.href = 'login.html';
-            return false;
-        }
-        return true;
-    },
-
-    // Synchronous version for backward compatibility
-    requireAuthSync() {
-        if (!this.isAuthenticated()) {
+    requireAuth() {
+        const isAuth = this.isAuthenticated();
+        console.log('[SESSION] requireAuth check:', isAuth);
+        if (!isAuth) {
+            console.log('[SESSION] Not authenticated, redirecting to login');
             window.location.href = 'login.html';
             return false;
         }
@@ -77,126 +31,28 @@ const SessionManager = {
 
     logout() {
         if (confirm('Are you sure you want to log out?')) {
-            if (typeof AuthClient !== 'undefined') {
-                AuthClient.logout(true);
-            } else {
-                localStorage.removeItem('datajam_session');
-                window.location.href = 'login.html';
-            }
+            localStorage.removeItem('datajam_session');
+            window.location.href = 'login.html';
         }
     },
 
     getCurrentUser() {
-        if (typeof AuthClient !== 'undefined' && AuthClient.isAuthenticated()) {
-            return AuthClient.getUsername() || 'User';
-        }
         const session = this.getSession();
         return session ? session.fullName || session.username : 'User';
     },
 
     getUserRole() {
-        if (typeof AuthClient !== 'undefined' && AuthClient.isAuthenticated()) {
-            return AuthClient.getRole();
-        }
         const session = this.getSession();
         return session ? session.role : null;
-    },
-
-    // Check if current user is admin (SERVER-VALIDATED, cannot be spoofed)
-    isAdmin() {
-        if (typeof AuthClient !== 'undefined') {
-            return AuthClient.isAdmin();
-        }
-        // Fallback to localStorage check
-        const session = this.getSession();
-        if (!session) return false;
-        if (session.role === 'admin') return true;
-        const username = (session.username || '').toLowerCase();
-        return username.endsWith('@data-jam.com') || username === 'admin';
-    },
-
-    // Require admin access - redirect to dashboard if not admin
-    async requireAdmin() {
-        if (typeof AuthClient !== 'undefined') {
-            return await AuthClient.requireAdmin();
-        }
-        if (!this.isAdmin()) {
-            window.location.href = 'dashboard.html';
-            return false;
-        }
-        return true;
-    },
-
-    // Get authorized projects from session
-    getProjects() {
-        if (typeof AuthClient !== 'undefined' && AuthClient.isAuthenticated()) {
-            return AuthClient.getProjects();
-        }
-        const session = this.getSession();
-        const projects = session && session.projects ? session.projects : [];
-        return Array.isArray(projects) ? projects : [];
-    },
-
-    // Get list of authorized project names
-    getProjectNames() {
-        if (typeof AuthClient !== 'undefined' && AuthClient.isAuthenticated()) {
-            return AuthClient.getProjectNames();
-        }
-        const projects = this.getProjects();
-        if (!Array.isArray(projects)) return [];
-        const names = projects.map(p => {
-            return p.project_name || p.ProjectName || p.projectName ||
-                   p.name || p.Name || p.PROJECT_NAME ||
-                   p.project || p.Project;
-        }).filter(Boolean);
-        return names;
-    },
-
-    // Check if user has access to a specific project
-    hasProjectAccess(projectName) {
-        if (typeof AuthClient !== 'undefined' && AuthClient.isAuthenticated()) {
-            return AuthClient.hasProjectAccess(projectName);
-        }
-        // Admins have access to everything
-        if (this.isAdmin()) return true;
-        // No project set = allow (for legacy data)
-        if (!projectName) return true;
-        const authorizedNames = this.getProjectNames();
-        // Non-admin with no authorized projects = no access
-        if (authorizedNames.length === 0) return false;
-        // Flexible matching
-        const projectLower = projectName.toLowerCase();
-        return authorizedNames.some(name => {
-            const authLower = name.toLowerCase();
-            if (authLower === projectLower) return true;
-            if (authLower.includes(projectLower) || projectLower.includes(authLower)) return true;
-            return false;
-        });
-    },
-
-    // Get CSRF token for forms
-    getCsrfToken() {
-        if (typeof AuthClient !== 'undefined') {
-            return AuthClient.getCsrfToken();
-        }
-        return null;
     }
 };
 
-// Initialize session on page load (async with server validation)
-(async function initSession() {
-    if (window.location.pathname.includes('login.html')) return;
-
-    // Wait for AuthClient to be available
-    if (typeof AuthClient !== 'undefined') {
-        const authenticated = await AuthClient.requireAuth();
-        if (!authenticated) return; // Already redirected
-        SessionManager._initialized = true;
-    } else {
-        // Fallback for pages without auth-client.js loaded
-        SessionManager.requireAuthSync();
-    }
-})();
+// Check authentication on page load (except login page)
+if (!window.location.pathname.includes('login.html')) {
+    console.log('[APP.JS] Checking auth...');
+    const authResult = SessionManager.requireAuth();
+    console.log('[APP.JS] Auth result:', authResult);
+}
 
 // ========================================
 // ENCRYPTION UTILITIES (Web Crypto API)
@@ -612,7 +468,7 @@ class InstallationManager {
 
             photoItem.innerHTML = `
                 <img src="${photo.data}" alt="${photo.name}">
-                <button type="button" class="photo-remove" data-action="remove-photo" data-id="${index}">×</button>
+                <button type="button" class="photo-remove" onclick="installManager.removePhoto(${index})">×</button>
             `;
 
             preview.appendChild(photoItem);
@@ -632,17 +488,11 @@ class InstallationManager {
         // Encrypt password before storing
         const encryptedPassword = await EncryptionUtil.encrypt(formData.get('password') || '');
 
-        // Handle project name - use custom input if "Other" selected
-        let projectName = formData.get('projectName');
-        if (projectName === '__other__') {
-            projectName = formData.get('customProjectName') || '';
-        }
-
         const installation = {
             id: this.editMode ? this.editId : Date.now(),
             timestamp: this.editMode ? this.installations.find(i => i.id === this.editId)?.timestamp : new Date().toISOString(),
             status: formData.get('status') || 'completed',
-            projectName: projectName,
+            projectName: formData.get('projectName'),
             clientName: formData.get('clientName'),
             clientContact: formData.get('clientContact'),
             clientEmail: formData.get('clientEmail'),
@@ -863,30 +713,11 @@ class InstallationListManager {
         let html = `
             <div class="calendar-header">
                 <div class="calendar-nav">
-                    <button class="calendar-nav-btn" data-action="change-month" data-value="-1">← Prev</button>
-                    <button class="calendar-nav-btn" data-action="change-month" data-value="0">Today</button>
-                    <button class="calendar-nav-btn" data-action="change-month" data-value="1">Next →</button>
+                    <button class="calendar-nav-btn" onclick="listManager.changeMonth(-1)">← Prev</button>
+                    <button class="calendar-nav-btn" onclick="listManager.changeMonth(0)">Today</button>
+                    <button class="calendar-nav-btn" onclick="listManager.changeMonth(1)">Next →</button>
                 </div>
                 <div class="calendar-title">${monthNames[month]} ${year}</div>
-                <div class="calendar-export">
-                    <button class="btn-secondary btn-small" data-action="export-ics" title="Download .ics file">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        Export .ics
-                    </button>
-                    <button class="btn-secondary btn-small" data-action="add-to-google-calendar" title="Add to Google Calendar">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                        Google Calendar
-                    </button>
-                </div>
             </div>
             <div class="calendar-grid">
                 <div class="calendar-day-header">Sun</div>
@@ -914,7 +745,7 @@ class InstallationListManager {
             const dayInstalls = installsByDate[dateStr] || [];
 
             html += `
-                <div class="calendar-day ${isToday ? 'today' : ''}" data-action="filter-by-date" data-value="${dateStr}">
+                <div class="calendar-day ${isToday ? 'today' : ''}" onclick="listManager.filterByDate('${dateStr}')">
                     <div class="calendar-day-number">${day}</div>
                     <div class="calendar-installations">
                         ${dayInstalls.slice(0, 3).map(install => {
@@ -947,115 +778,6 @@ class InstallationListManager {
         document.getElementById('searchInput').value = dateStr;
         this.searchQuery = dateStr;
         this.renderInstallations();
-    }
-
-    // Export installations to .ics calendar file
-    exportToICS() {
-        const installations = this.installations.filter(i => i.installDate);
-        if (installations.length === 0) {
-            alert('No installations with dates to export.');
-            return;
-        }
-
-        let icsContent = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:-//DataJam//Install Tracker//EN',
-            'CALSCALE:GREGORIAN',
-            'METHOD:PUBLISH'
-        ];
-
-        installations.forEach(install => {
-            const date = install.installDate.replace(/-/g, '');
-            const time = install.installTime ? install.installTime.replace(':', '') + '00' : '090000';
-            const endTime = install.installTime ?
-                (parseInt(install.installTime.split(':')[0]) + 2).toString().padStart(2, '0') + install.installTime.split(':')[1] + '00'
-                : '110000';
-
-            const summary = `JamBox Install: ${install.clientName || 'Unknown Venue'}`;
-            const location = install.installAddress ? install.installAddress.replace(/\n/g, ', ') : '';
-            const description = [
-                install.projectName ? `Project: ${install.projectName}` : '',
-                install.jamboxId ? `JamBox ID: ${install.jamboxId}` : '',
-                install.status ? `Status: ${install.status}` : '',
-                install.notes ? `Notes: ${install.notes}` : ''
-            ].filter(Boolean).join('\\n');
-
-            icsContent.push(
-                'BEGIN:VEVENT',
-                `DTSTART:${date}T${time}`,
-                `DTEND:${date}T${endTime}`,
-                `SUMMARY:${summary}`,
-                location ? `LOCATION:${location}` : '',
-                `DESCRIPTION:${description}`,
-                `UID:${install.id}@datajam-installs`,
-                'END:VEVENT'
-            );
-        });
-
-        icsContent.push('END:VCALENDAR');
-
-        // Filter empty lines and join
-        const icsString = icsContent.filter(line => line).join('\r\n');
-
-        // Download file
-        const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `datajam-installations-${new Date().toISOString().split('T')[0]}.ics`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
-
-    // Add installations to Google Calendar
-    addToGoogleCalendar() {
-        const installations = this.installations.filter(i => i.installDate);
-        if (installations.length === 0) {
-            alert('No installations with dates to add.');
-            return;
-        }
-
-        if (installations.length === 1) {
-            // Single event - open directly
-            this.openGoogleCalendarEvent(installations[0]);
-        } else {
-            // Multiple events - show selection or add first one
-            const choice = confirm(`You have ${installations.length} installations. Click OK to add the most recent one, or Cancel to export all as .ics file instead.`);
-            if (choice) {
-                // Sort by date descending and take first
-                const sorted = [...installations].sort((a, b) =>
-                    new Date(b.installDate) - new Date(a.installDate)
-                );
-                this.openGoogleCalendarEvent(sorted[0]);
-            } else {
-                this.exportToICS();
-            }
-        }
-    }
-
-    openGoogleCalendarEvent(install) {
-        const title = encodeURIComponent(`JamBox Install: ${install.clientName || 'Unknown Venue'}`);
-        const date = install.installDate.replace(/-/g, '');
-        const time = install.installTime ? install.installTime.replace(':', '') + '00' : '090000';
-        const endTime = install.installTime ?
-            (parseInt(install.installTime.split(':')[0]) + 2).toString().padStart(2, '0') + install.installTime.split(':')[1] + '00'
-            : '110000';
-
-        const details = encodeURIComponent([
-            install.projectName ? `Project: ${install.projectName}` : '',
-            install.jamboxId ? `JamBox ID: ${install.jamboxId}` : '',
-            install.status ? `Status: ${install.status}` : '',
-            install.notes ? `Notes: ${install.notes}` : ''
-        ].filter(Boolean).join('\n'));
-
-        const location = encodeURIComponent(install.installAddress ? install.installAddress.replace(/\n/g, ', ') : '');
-
-        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${date}T${time}/${date}T${endTime}&details=${details}&location=${location}`;
-
-        window.open(url, '_blank');
     }
 
     setupEventListeners() {
@@ -1105,25 +827,7 @@ class InstallationListManager {
 
     loadInstallations() {
         const stored = StorageUtil.safeGet('datajam_installations');
-        const allInstallations = StorageUtil.safeParse(stored, []);
-
-        // Admins see all installations
-        if (SessionManager.isAdmin()) {
-            return allInstallations;
-        }
-
-        // Filter by authorized projects for non-admins
-        const authorizedProjects = SessionManager.getProjectNames();
-        if (authorizedProjects.length > 0) {
-            return allInstallations.filter(install => {
-                // Allow if no project set (legacy data) or project is authorized
-                if (!install.projectName) return true;
-                return SessionManager.hasProjectAccess(install.projectName);
-            });
-        }
-
-        // Non-admin with no authorized projects = no installations
-        return [];
+        return StorageUtil.safeParse(stored, []);
     }
 
     renderInstallations() {
@@ -1228,11 +932,11 @@ class InstallationListManager {
                     ${photoHTML}
                 </div>
                 <div class="install-card-actions">
-                    <button class="btn-small btn-view" data-action="view-details" data-id="${install.id}">View Details</button>
-                    <button class="btn-small btn-print" data-action="print-report" data-id="${install.id}">Print Report</button>
-                    <button class="btn-small btn-print" data-action="save-pdf" data-id="${install.id}">Save as PDF</button>
-                    <button class="btn-small btn-edit" data-action="edit-installation" data-id="${install.id}">Edit</button>
-                    <button class="btn-small btn-delete" data-action="delete-installation" data-id="${install.id}">Delete</button>
+                    <button class="btn-small btn-view" onclick="listManager.viewDetails(${install.id})">View Details</button>
+                    <button class="btn-small btn-print" onclick="listManager.printReport(${install.id})">Print Report</button>
+                    <button class="btn-small btn-print" onclick="listManager.savePDF(${install.id})">Save as PDF</button>
+                    <button class="btn-small btn-edit" onclick="listManager.editInstallation(${install.id})">Edit</button>
+                    <button class="btn-small btn-delete" onclick="listManager.deleteInstallation(${install.id})">Delete</button>
                 </div>
             </div>
         `;
@@ -1305,8 +1009,8 @@ class InstallationListManager {
                     </div>
                 </div>
                 <div class="modal-actions" style="margin-top: 32px;">
-                    <button class="btn-secondary" data-action="print-report" data-id="${install.id}">Print Report / Save as PDF</button>
-                    <button class="btn-primary" data-action="close-modal">Close</button>
+                    <button class="btn-secondary" onclick="listManager.printReport(${install.id})">Print Report / Save as PDF</button>
+                    <button class="btn-primary" onclick="this.closest('.modal').remove()">Close</button>
                 </div>
             </div>
         `;
@@ -1728,7 +1432,7 @@ class InventoryManager {
                 <div style="font-weight: 500; color: var(--datajam-pink); font-size: 16px;">${warningText}</div>
                 <div style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;">Please reorder stock to avoid installation delays.</div>
             </div>
-            <button data-action="close-warning" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 24px; padding: 0; line-height: 1;">&times;</button>
+            <button onclick="this.closest('.low-stock-warning').remove()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 24px; padding: 0; line-height: 1;">&times;</button>
         `;
 
         // Insert at top of main content
@@ -2018,8 +1722,8 @@ class InventoryManager {
                     ${shipment.notes ? `<div class="install-info">📝 ${this.escapeHtml(shipment.notes)}</div>` : ''}
                 </div>
                 <div class="install-card-actions">
-                    <button class="btn-small btn-primary" data-action="mark-delivered" data-id="${shipment.id}">Mark as Delivered</button>
-                    <button class="btn-small btn-delete" data-action="delete-shipment" data-id="${shipment.id}">Delete</button>
+                    <button class="btn-small btn-primary" onclick="inventoryManager.markDelivered(${shipment.id})">Mark as Delivered</button>
+                    <button class="btn-small btn-delete" onclick="inventoryManager.deleteShipment(${shipment.id})">Delete</button>
                 </div>
             </div>
         `).join('');
@@ -2055,7 +1759,7 @@ class InventoryManager {
                     ${shipment.notes ? `<div class="install-info">📝 ${this.escapeHtml(shipment.notes)}</div>` : ''}
                 </div>
                 <div class="install-card-actions">
-                    <button class="btn-small btn-delete" data-action="delete-shipment" data-id="${shipment.id}">Delete</button>
+                    <button class="btn-small btn-delete" onclick="inventoryManager.deleteShipment(${shipment.id})">Delete</button>
                 </div>
             </div>
         `).join('');
