@@ -299,19 +299,27 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
+                        // Debug: Log what the API returned
+                        console.log('[LOGIN] API response:', result);
+                        console.log('[LOGIN] Projects from API:', result.projects);
+
                         // Determine role based on email domain or username
                         // @data-jam.com users and 'admin' username get admin access (can see Inventory and Users)
                         const lowerUsername = username.toLowerCase();
                         const isAdmin = lowerUsername.endsWith('@data-jam.com') || lowerUsername === 'admin';
 
-                        // Store session
+                        // Store session - ensure projects is an array
+                        const projectsArray = Array.isArray(result.projects) ? result.projects : [];
+                        console.log('[LOGIN] Storing projects array:', projectsArray);
+
                         const session = {
                             username: username,
                             fullName: username,  // DataJam Portal doesn't return full name
                             role: isAdmin ? 'admin' : 'installer',
                             loginTime: new Date().toISOString(),
-                            projects: Array.isArray(result.projects) ? result.projects : []
+                            projects: projectsArray
                         };
+                        console.log('[LOGIN] Full session object:', session);
                         localStorage.setItem('datajam_session', JSON.stringify(session));
 
                         this.showSuccess('Login successful! Redirecting...');

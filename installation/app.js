@@ -74,7 +74,16 @@ const SessionManager = {
     getProjectNames() {
         const projects = this.getProjects();
         if (!Array.isArray(projects)) return [];
-        return projects.map(p => p.project_name || p.ProjectName || p.name).filter(Boolean);
+        // Try multiple possible field names from API response
+        const names = projects.map(p => {
+            const name = p.project_name || p.ProjectName || p.projectName ||
+                        p.name || p.Name || p.PROJECT_NAME ||
+                        p.project || p.Project;
+            console.log('[SessionManager] Project object:', p, '-> extracted name:', name);
+            return name;
+        }).filter(Boolean);
+        console.log('[SessionManager] Authorized project names:', names);
+        return names;
     },
 
     // Check if user has access to a specific project
