@@ -1991,13 +1991,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Global fix: Ensure sidebar "New Install" links work on all pages
-    // Use explicit ./index.html to ensure correct relative path resolution
+    // Use absolute path to bypass Netlify's Pretty URLs transformation
     document.querySelectorAll('.sidebar a[href*="index.html"]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('[Nav] Navigating to ./index.html');
-            window.location.href = './index.html';
+            console.log('[Nav] Navigating to /installation/index.html');
+            window.location.href = '/installation/index.html';
         });
     });
 });
