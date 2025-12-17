@@ -2,8 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/installation/login.html">
-    <title>Redirecting to Installer Portal...</title>
+    <title>DataJam Installer Portal</title>
+    <script>
+        // Check if user is already logged in - redirect to dashboard instead of login
+        try {
+            const session = localStorage.getItem('datajam_session');
+            if (session) {
+                const parsed = JSON.parse(session);
+                if (parsed && parsed.username) {
+                    window.location.href = '/installation/dashboard.html';
+                } else {
+                    window.location.href = '/installation/login.html';
+                }
+            } else {
+                window.location.href = '/installation/login.html';
+            }
+        } catch (e) {
+            window.location.href = '/installation/login.html';
+        }
+    </script>
+    <noscript>
+        <meta http-equiv="refresh" content="0; url=/installation/login.html">
+    </noscript>
 </head>
 <body>
     <p>Redirecting to <a href="/installation/login.html">Installer Portal</a>...</p>

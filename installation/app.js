@@ -47,11 +47,24 @@ const SessionManager = {
     }
 };
 
-// Check authentication on page load (except login page)
-if (!window.location.pathname.includes('login.html')) {
+// Auth check function - called from DOMContentLoaded to avoid race conditions
+function checkAuthOnLoad() {
+    if (window.location.pathname.includes('login.html')) {
+        console.log('[APP.JS] On login page, skipping auth check');
+        return;
+    }
+
     console.log('[APP.JS] Checking auth...');
-    const authResult = SessionManager.requireAuth();
-    console.log('[APP.JS] Auth result:', authResult);
+    const session = SessionManager.getSession();
+    console.log('[APP.JS] Session data:', session ? 'exists' : 'null', session?.username || 'no username');
+
+    if (!session || !session.username) {
+        console.log('[APP.JS] No valid session, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    console.log('[APP.JS] Auth passed for user:', session.username);
 }
 
 // ========================================
@@ -1962,6 +1975,9 @@ let listManager;
 let inventoryManager;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Check authentication first (except on login page)
+    checkAuthOnLoad();
+
     if (document.getElementById('installForm')) {
         installManager = new InstallationManager();
     }
@@ -1975,12 +1991,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Global fix: Ensure sidebar "New Install" links work on all pages
+    // Use explicit ./index.html to ensure correct relative path resolution
     document.querySelectorAll('.sidebar a[href*="index.html"]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('[Nav] Navigating to index.html');
-            window.location.href = 'index.html';
+            console.log('[Nav] Navigating to ./index.html');
+            window.location.href = './index.html';
         });
     });
 });
