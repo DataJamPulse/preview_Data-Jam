@@ -412,8 +412,16 @@ class InstallationManager {
                     // After editing, go back to installations list
                     window.location.href = 'installations.html';
                 } else {
-                    // For new installation, reset form
+                    // For new installation, fully reset state and reload from storage
+                    this.editMode = false;
+                    this.editId = null;
+                    this.installations = this.loadInstallations(); // Reload from localStorage
                     this.resetForm();
+
+                    // Clear any URL params (in case of stale edit param)
+                    if (window.location.search) {
+                        window.history.replaceState({}, '', window.location.pathname);
+                    }
                 }
             });
         }
@@ -514,8 +522,14 @@ class InstallationManager {
         // Save SSID to history for autocomplete
         this.saveSSIDToHistory(installation.ssid);
 
-        this.saveInstallation(installation);
-        this.showModal();
+        try {
+            this.saveInstallation(installation);
+            console.log('[Install] Saved successfully. Total installations:', this.installations.length);
+            this.showModal();
+        } catch (error) {
+            console.error('[Install] Save failed:', error);
+            alert('Failed to save installation. Please try again.');
+        }
     }
 
     handleReset() {
@@ -540,19 +554,24 @@ class InstallationManager {
     }
 
     saveInstallation(installation) {
+        console.log('[Install] Saving installation:', installation.id, '- Edit mode:', this.editMode);
+
         if (this.editMode) {
             // Update existing installation
             const index = this.installations.findIndex(i => i.id === this.editId);
             if (index !== -1) {
                 this.installations[index] = installation;
+                console.log('[Install] Updated existing at index:', index);
             }
         } else {
             // Create new installation
             this.installations.push(installation);
+            console.log('[Install] Added new. Array length:', this.installations.length);
         }
 
         // Use safe storage with error handling
         const success = StorageUtil.safeSet('datajam_installations', JSON.stringify(this.installations));
+        console.log('[Install] LocalStorage save result:', success);
 
         if (!success) {
             // Revert changes if save failed
