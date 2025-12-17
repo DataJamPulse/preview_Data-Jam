@@ -85,6 +85,14 @@
   to = "/contact.html"
   status = 200
 
+# Redirect /installation/ (with trailing slash) to index.html for logged-in users
+# The index.html page will handle auth check and redirect if needed
+[[redirects]]
+  from = "/installation/"
+  to = "/installation/index.html"
+  status = 200
+
+# Redirect /installation (no trailing slash) to login for non-logged-in users
 [[redirects]]
   from = "/installation"
   to = "/installation/login.html"
