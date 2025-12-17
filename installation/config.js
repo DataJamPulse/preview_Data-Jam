@@ -6,7 +6,7 @@
 const CONFIG = {
   // Supabase Configuration
   SUPABASE_URL: 'https://ysavdqiiilslrigtpacu.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzYXZkcWlpaWxzbHJpZ3RwYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUzNzgyNTgsImV4cCI6MjA0MDk1NDI1OH0.4PK1M4kCgAdT4DLMN6UIbI5OR5HFMwQQJN1XBXKL1eE',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzYXZkcWlpaWxzbHJpZ3RwYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTU0NTYsImV4cCI6MjA4MDg5MTQ1Nn0.DrsEv_e_7M8qL1PmGpTMluGtV8C1qRfzLccK6y3L9RI',
 
   // Storage bucket name (created in Supabase dashboard)
   STORAGE_BUCKET: 'installer-photos',

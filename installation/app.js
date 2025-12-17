@@ -523,7 +523,7 @@ class InstallationManager {
         this.saveSSIDToHistory(installation.ssid);
 
         try {
-            this.saveInstallation(installation);
+            await this.saveInstallation(installation);
             console.log('[Install] Saved successfully. Total installations:', this.installations.length);
             this.showModal();
         } catch (error) {
@@ -553,7 +553,7 @@ class InstallationManager {
         }
     }
 
-    saveInstallation(installation) {
+    async saveInstallation(installation) {
         console.log('[Install] Saving installation:', installation.id, '- Edit mode:', this.editMode);
 
         if (this.editMode) {
@@ -581,6 +581,57 @@ class InstallationManager {
                 this.installations.pop(); // Remove the installation we just added
             }
             throw new Error('Failed to save installation');
+        }
+
+        // Sync to Supabase database
+        await this.syncToSupabase(installation);
+    }
+
+    async syncToSupabase(installation) {
+        try {
+            // Direct Supabase sync using fetch (simpler than the client wrapper)
+            const SUPABASE_URL = 'https://ysavdqiiilslrigtpacu.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzYXZkcWlpaWxzbHJpZ3RwYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTU0NTYsImV4cCI6MjA4MDg5MTQ1Nn0.DrsEv_e_7M8qL1PmGpTMluGtV8C1qRfzLccK6y3L9RI';
+
+            // Prepare data for Supabase with correct column names
+            const dbInstallation = {
+                status: installation.status || 'completed',
+                venue_name: installation.clientName || 'Unknown Venue',
+                contact_name: installation.clientContact || null,
+                contact_email: installation.clientEmail || null,
+                contact_phone: installation.clientPhone || null,
+                location_type: installation.locationType || null,
+                address: installation.installAddress || null,
+                jambox_id: installation.jamboxId || null,
+                wifi_ssid: installation.ssid || null,
+                ip_address: installation.ipAddress || null,
+                install_date: installation.installDate || null,
+                install_time: installation.installTime || null,
+                notes: installation.notes || null,
+                device_tested: installation.deviceTested || false,
+                network_verified: installation.networkVerified || false
+            };
+
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/installer_installations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(dbInstallation)
+            });
+
+            if (response.ok) {
+                console.log('[Install] Supabase sync successful');
+            } else {
+                const error = await response.text();
+                console.error('[Install] Supabase sync failed:', error);
+            }
+        } catch (error) {
+            console.error('[Install] Supabase sync error:', error);
+            // Don't throw - localStorage save was successful, Supabase sync is best-effort
         }
     }
 
