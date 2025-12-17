@@ -1973,4 +1973,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('jamboxStock')) {
         inventoryManager = new InventoryManager();
     }
+
+    // Global fix: Ensure sidebar "New Install" links work on all pages
+    document.querySelectorAll('.sidebar a[href*="index.html"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[Nav] Navigating to index.html');
+            window.location.href = 'index.html';
+        });
+    });
 });
