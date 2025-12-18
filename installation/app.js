@@ -1464,6 +1464,11 @@ class InventoryManager {
     }
 
     updateStats() {
+        // Calculate JamBox stats from registry (not old inventory)
+        const inStockCount = this.getJamboxesByStatus('in_stock').length;
+        const shippedCount = this.getJamboxesByStatus('shipped').length;
+        const installedCount = this.jamboxRegistry.filter(jb => jb.status === 'installed' || jb.status === 'active').length;
+
         // Calculate total deployed from installations
         const installations = JSON.parse(localStorage.getItem('datajam_installations') || '[]');
         const deployed = installations.length;
@@ -1476,11 +1481,17 @@ class InventoryManager {
 
         // Low stock thresholds
         const LOW_STOCK_THRESHOLD = 10;
-        const jamboxLow = this.inventory.jambox < LOW_STOCK_THRESHOLD;
+        const jamboxLow = inStockCount < LOW_STOCK_THRESHOLD;
         const cableLow = this.inventory.cable < LOW_STOCK_THRESHOLD;
 
         if (jamboxStock) {
-            jamboxStock.textContent = this.inventory.jambox;
+            // Show In Stock count with breakdown if registry has data
+            if (this.jamboxRegistry.length > 0) {
+                jamboxStock.innerHTML = `${inStockCount} <span style="font-size: 12px; font-weight: normal; opacity: 0.8;">in stock</span>`;
+            } else {
+                // Fall back to old inventory if registry is empty (backwards compatibility)
+                jamboxStock.textContent = this.inventory.jambox;
+            }
             jamboxStock.style.color = jamboxLow ? '#E62F6E' : '';
         }
         if (cableStock) {
@@ -1489,6 +1500,9 @@ class InventoryManager {
         }
         if (activeShipments) activeShipments.textContent = this.shipments.filter(s => s.status === 'active').length;
         if (totalDeployed) totalDeployed.textContent = deployed;
+
+        // Also update registry stats if on registry tab
+        this.updateRegistryStats();
 
         // Show low stock warning
         this.showLowStockWarning(jamboxLow, cableLow);
@@ -1556,6 +1570,11 @@ class InventoryManager {
                 if (targetContent) {
                     targetContent.classList.add('active');
                 }
+
+                // Refresh JamBox selector when switching to Shipments tab
+                if (targetTab === 'shipments') {
+                    this.renderJamboxSelector();
+                }
             });
         });
     }
@@ -1603,6 +1622,9 @@ class InventoryManager {
                 }
             });
         }
+
+        // JamBox selector for shipments
+        this.setupJamboxSelector();
 
         // Export CSV button
         const exportBtn = document.getElementById('exportInventoryCSV');
@@ -1700,7 +1722,8 @@ class InventoryManager {
     handleCreateShipment() {
         let destination = document.getElementById('shipDestination').value;
         const date = document.getElementById('shipDate').value;
-        const jamboxQty = parseInt(document.getElementById('shipJamboxQty').value) || 0;
+        const selectedJamboxIds = this.getSelectedJamboxIds();
+        const jamboxQty = selectedJamboxIds.length;
         const cableQty = parseInt(document.getElementById('shipCableQty').value) || 0;
         const notes = document.getElementById('shipNotes').value;
 
@@ -1720,31 +1743,35 @@ class InventoryManager {
         }
 
         if (jamboxQty === 0 && cableQty === 0) {
-            alert('Please specify at least one item to ship');
+            alert('Please select at least one JamBox or specify cables to ship');
             return;
         }
 
-        // Check stock availability
-        if (this.inventory.jambox < jamboxQty) {
-            alert(`Not enough JamBox stock. Available: ${this.inventory.jambox}`);
-            return;
-        }
+        // Check cable stock availability
         if (this.inventory.cable < cableQty) {
             alert(`Not enough cable stock. Available: ${this.inventory.cable}`);
             return;
         }
 
-        // Deduct from inventory
-        this.inventory.jambox -= jamboxQty;
+        // Deduct cables from inventory (JamBoxes are tracked individually)
         this.inventory.cable -= cableQty;
         this.saveInventory();
 
-        // Create shipment
+        // Update each selected JamBox status to "shipped"
+        selectedJamboxIds.forEach(jamboxId => {
+            this.updateJamboxStatus(jamboxId, 'shipped', {
+                destination: destination,
+                date: date
+            });
+        });
+
+        // Create shipment with JamBox IDs
         const shipment = {
             id: Date.now(),
             destination: destination,
             date: date,
-            jamboxQty: jamboxQty,
+            jamboxIds: selectedJamboxIds,  // Array of specific IDs
+            jamboxQty: jamboxQty,          // Keep for backwards compatibility
             cableQty: cableQty,
             notes: notes,
             status: 'active',
@@ -1761,9 +1788,10 @@ class InventoryManager {
                 type: 'jambox',
                 action: 'ship',
                 quantity: jamboxQty,
+                jamboxIds: selectedJamboxIds,
                 destination: destination,
-                notes: notes,
-                user: 'Alex'
+                notes: `Shipped JamBoxes: ${selectedJamboxIds.join(', ')}${notes ? ' - ' + notes : ''}`,
+                user: SessionManager.getCurrentUser() || 'Alex'
             });
         }
         if (cableQty > 0) {
@@ -1775,7 +1803,7 @@ class InventoryManager {
                 quantity: cableQty,
                 destination: destination,
                 notes: notes,
-                user: 'Alex'
+                user: SessionManager.getCurrentUser() || 'Alex'
             });
         }
         this.saveHistory();
@@ -1784,11 +1812,19 @@ class InventoryManager {
         this.updateStats();
         this.renderShipments();
         this.renderHistory();
+        this.renderJamboxRegistry();
+        this.renderJamboxSelector();  // Refresh selector to remove shipped items
 
         // Reset form
         document.getElementById('shipmentForm').reset();
+        this.updateSelectedJamboxCount();
 
-        alert(`Shipment created successfully!\n${jamboxQty} JamBox(es) and ${cableQty} cable(s) shipped to ${destination}`);
+        // Reset select all button text
+        const selectAllBtn = document.getElementById('selectAllJamboxes');
+        if (selectAllBtn) selectAllBtn.textContent = 'Select All';
+
+        const jamboxList = jamboxQty > 0 ? `\nJamBoxes: ${selectedJamboxIds.join(', ')}` : '';
+        alert(`Shipment created successfully!\n${jamboxQty} JamBox(es) and ${cableQty} cable(s) shipped to ${destination}${jamboxList}`);
     }
 
     renderShipments() {
@@ -1802,7 +1838,11 @@ class InventoryManager {
             return;
         }
 
-        grid.innerHTML = activeShipments.map(shipment => `
+        grid.innerHTML = activeShipments.map(shipment => {
+            const jamboxIdsList = shipment.jamboxIds && shipment.jamboxIds.length > 0
+                ? shipment.jamboxIds.join(', ')
+                : `${shipment.jamboxQty} unit(s)`;
+            return `
             <div class="install-card">
                 <div class="install-card-header">
                     <h3>${this.escapeHtml(shipment.destination)}</h3>
@@ -1812,7 +1852,7 @@ class InventoryManager {
                 </div>
                 <div class="install-card-body">
                     <div class="install-info">📅 ${shipment.date}</div>
-                    <div class="install-info">📦 ${shipment.jamboxQty} JamBox(es)</div>
+                    <div class="install-info">📦 <strong>${shipment.jamboxQty || (shipment.jamboxIds ? shipment.jamboxIds.length : 0)}</strong> JamBox(es)${shipment.jamboxIds && shipment.jamboxIds.length > 0 ? `<br><span style="font-size: 12px; color: var(--text-secondary); margin-left: 20px;">${this.escapeHtml(jamboxIdsList)}</span>` : ''}</div>
                     <div class="install-info">🔌 ${shipment.cableQty} Cable(s)</div>
                     ${shipment.notes ? `<div class="install-info">📝 ${this.escapeHtml(shipment.notes)}</div>` : ''}
                 </div>
@@ -1821,7 +1861,7 @@ class InventoryManager {
                     <button class="btn-small btn-delete" onclick="inventoryManager.deleteShipment(${shipment.id})">Delete</button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         // Also render delivered shipments
         this.renderDeliveredShipments();
@@ -1838,7 +1878,11 @@ class InventoryManager {
             return;
         }
 
-        grid.innerHTML = deliveredShipments.map(shipment => `
+        grid.innerHTML = deliveredShipments.map(shipment => {
+            const jamboxIdsList = shipment.jamboxIds && shipment.jamboxIds.length > 0
+                ? shipment.jamboxIds.join(', ')
+                : `${shipment.jamboxQty} unit(s)`;
+            return `
             <div class="install-card">
                 <div class="install-card-header">
                     <h3>${this.escapeHtml(shipment.destination)}</h3>
@@ -1849,7 +1893,7 @@ class InventoryManager {
                 <div class="install-card-body">
                     <div class="install-info">📅 Shipped: ${shipment.date}</div>
                     ${shipment.deliveredAt ? `<div class="install-info">✅ Delivered: ${new Date(shipment.deliveredAt).toLocaleDateString('en-GB')}</div>` : ''}
-                    <div class="install-info">📦 ${shipment.jamboxQty} JamBox(es)</div>
+                    <div class="install-info">📦 <strong>${shipment.jamboxQty || (shipment.jamboxIds ? shipment.jamboxIds.length : 0)}</strong> JamBox(es)${shipment.jamboxIds && shipment.jamboxIds.length > 0 ? `<br><span style="font-size: 12px; color: var(--text-secondary); margin-left: 20px;">${this.escapeHtml(jamboxIdsList)}</span>` : ''}</div>
                     <div class="install-info">🔌 ${shipment.cableQty} Cable(s)</div>
                     ${shipment.notes ? `<div class="install-info">📝 ${this.escapeHtml(shipment.notes)}</div>` : ''}
                 </div>
@@ -1857,7 +1901,7 @@ class InventoryManager {
                     <button class="btn-small btn-delete" onclick="inventoryManager.deleteShipment(${shipment.id})">Delete</button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     markDelivered(id) {
@@ -1972,6 +2016,83 @@ class InventoryManager {
         this.saveHistory();
         this.renderHistory();
         alert('History cleared');
+    }
+
+    // ========================================
+    // JAMBOX SELECTOR FOR SHIPMENTS
+    // ========================================
+
+    setupJamboxSelector() {
+        const selectAllBtn = document.getElementById('selectAllJamboxes');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', () => this.toggleSelectAllJamboxes());
+        }
+
+        // Initial render of selector
+        this.renderJamboxSelector();
+    }
+
+    renderJamboxSelector() {
+        const container = document.getElementById('jamboxSelectorList');
+        const noJamboxesMsg = document.getElementById('noJamboxesAvailable');
+        if (!container) return;
+
+        const inStockJamboxes = this.getJamboxesByStatus('in_stock');
+
+        if (inStockJamboxes.length === 0) {
+            container.innerHTML = '';
+            if (noJamboxesMsg) noJamboxesMsg.style.display = 'block';
+            this.updateSelectedJamboxCount();
+            return;
+        }
+
+        if (noJamboxesMsg) noJamboxesMsg.style.display = 'none';
+
+        container.innerHTML = inStockJamboxes.map(jb => `
+            <label style="display: flex; align-items: center; gap: 10px; padding: 8px; margin: 4px 0; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                <input type="checkbox" class="jambox-ship-checkbox" value="${this.escapeHtml(jb.id)}" style="width: 18px; height: 18px; accent-color: #E62F6E;">
+                <span style="font-weight: 500;">${this.escapeHtml(jb.id)}</span>
+                <span style="color: var(--text-secondary); font-size: 12px; margin-left: auto;">
+                    Added ${jb.addedDate}${jb.notes ? ` - ${this.escapeHtml(jb.notes.substring(0, 30))}${jb.notes.length > 30 ? '...' : ''}` : ''}
+                </span>
+            </label>
+        `).join('');
+
+        // Add change listeners to update count
+        container.querySelectorAll('.jambox-ship-checkbox').forEach(cb => {
+            cb.addEventListener('change', () => this.updateSelectedJamboxCount());
+        });
+    }
+
+    updateSelectedJamboxCount() {
+        const checkboxes = document.querySelectorAll('.jambox-ship-checkbox:checked');
+        const countEl = document.getElementById('selectedJamboxCount');
+        const hiddenQty = document.getElementById('shipJamboxQty');
+
+        if (countEl) countEl.textContent = checkboxes.length;
+        if (hiddenQty) hiddenQty.value = checkboxes.length;
+    }
+
+    toggleSelectAllJamboxes() {
+        const checkboxes = document.querySelectorAll('.jambox-ship-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+        checkboxes.forEach(cb => {
+            cb.checked = !allChecked;
+        });
+
+        this.updateSelectedJamboxCount();
+
+        // Update button text
+        const btn = document.getElementById('selectAllJamboxes');
+        if (btn) {
+            btn.textContent = allChecked ? 'Select All' : 'Deselect All';
+        }
+    }
+
+    getSelectedJamboxIds() {
+        const checkboxes = document.querySelectorAll('.jambox-ship-checkbox:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
     }
 
     // ========================================

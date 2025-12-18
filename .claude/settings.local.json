@@ -15,7 +15,9 @@
       "Bash(fi)",
       "Bash(done)",
       "Bash(node -c:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(unzip:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

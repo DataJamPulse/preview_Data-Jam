@@ -431,9 +431,23 @@
                                 <label for="shipDate">Shipment Date *</label>
                                 <input type="date" id="shipDate" required>
                             </div>
-                            <div class="form-group">
-                                <label for="shipJamboxQty">JamBox Quantity</label>
-                                <input type="number" id="shipJamboxQty" min="0" value="0">
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label>Select JamBoxes to Ship</label>
+                                <div id="jamboxSelectorContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: var(--bg-primary);">
+                                    <div id="jamboxSelectorList">
+                                        <!-- In-stock JamBoxes will be rendered here -->
+                                    </div>
+                                    <div id="noJamboxesAvailable" style="color: var(--text-secondary); text-align: center; padding: 20px; display: none;">
+                                        No JamBoxes in stock. Add some in the JamBox Registry tab first.
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                    <span style="font-size: 13px; color: var(--text-secondary);">
+                                        Selected: <strong id="selectedJamboxCount">0</strong> JamBox(es)
+                                    </span>
+                                    <button type="button" id="selectAllJamboxes" class="btn-secondary" style="padding: 4px 12px; font-size: 12px;">Select All</button>
+                                </div>
+                                <input type="hidden" id="shipJamboxQty" value="0">
                             </div>
                             <div class="form-group">
                                 <label for="shipCableQty">Cable Quantity</label>
