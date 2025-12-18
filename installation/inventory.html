@@ -137,9 +137,12 @@
             </div>
 
             <!-- Tabs for different sections -->
-            <div class="inventory-tabs" style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid var(--border-color); padding-bottom: 0;">
-                <button class="inventory-tab active" data-tab="stock">
-                    📦 Stock Management
+            <div class="inventory-tabs" style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid var(--border-color); padding-bottom: 0; flex-wrap: wrap;">
+                <button class="inventory-tab active" data-tab="registry">
+                    🔧 JamBox Registry
+                </button>
+                <button class="inventory-tab" data-tab="stock">
+                    📦 Cable Stock
                 </button>
                 <button class="inventory-tab" data-tab="shipments">
                     🚚 Active Shipments
@@ -152,8 +155,110 @@
                 </button>
             </div>
 
-            <!-- Stock Management Section -->
-            <div class="tab-content active" id="stockTab">
+            <!-- JamBox Registry Section -->
+            <div class="tab-content active" id="registryTab">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <select id="registryFilter" style="padding: 8px 12px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                            <option value="all">All JamBoxes</option>
+                            <option value="in_stock">In Stock</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="installed">Installed</option>
+                            <option value="faulty">Faulty</option>
+                        </select>
+                        <input type="text" id="registrySearch" placeholder="Search by ID..." style="padding: 8px 12px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); width: 200px;">
+                    </div>
+                    <button id="addJamboxBtn" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Add JamBox
+                    </button>
+                </div>
+
+                <!-- Add JamBox Form (hidden by default) -->
+                <div id="addJamboxForm" class="form-section" style="display: none; margin-bottom: 24px;">
+                    <h2>Add New JamBox to Registry</h2>
+                    <form id="jamboxForm">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group">
+                                <label for="jamboxId">JamBox ID *</label>
+                                <input type="text" id="jamboxId" placeholder="Enter ID from device label" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="jamboxStatus">Initial Status</label>
+                                <select id="jamboxStatus">
+                                    <option value="in_stock">In Stock</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="installed">Installed</option>
+                                    <option value="faulty">Faulty</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="jamboxNotes">Notes</label>
+                                <textarea id="jamboxNotes" rows="2" placeholder="Any additional notes about this device"></textarea>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 16px;">
+                            <button type="submit" class="btn-primary">Add to Registry</button>
+                            <button type="button" id="cancelAddJambox" class="btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- JamBox Summary Stats -->
+                <div id="registryStats" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px;">
+                    <div style="padding: 16px; background: var(--bg-secondary); border-radius: 12px; text-align: center; border: 1px solid var(--border-color);">
+                        <div style="font-size: 24px; font-weight: 500; color: var(--text-primary);" id="totalJamboxes">0</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Total</div>
+                    </div>
+                    <div style="padding: 16px; background: var(--bg-secondary); border-radius: 12px; text-align: center; border: 1px solid #6B7280;">
+                        <div style="font-size: 24px; font-weight: 500; color: #6B7280;" id="inStockJamboxes">0</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">In Stock</div>
+                    </div>
+                    <div style="padding: 16px; background: var(--bg-secondary); border-radius: 12px; text-align: center; border: 1px solid #F59E0B;">
+                        <div style="font-size: 24px; font-weight: 500; color: #F59E0B;" id="shippedJamboxes">0</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Shipped</div>
+                    </div>
+                    <div style="padding: 16px; background: var(--bg-secondary); border-radius: 12px; text-align: center; border: 1px solid #3B82F6;">
+                        <div style="font-size: 24px; font-weight: 500; color: #3B82F6;" id="installedJamboxes">0</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Installed</div>
+                    </div>
+                    <div style="padding: 16px; background: var(--bg-secondary); border-radius: 12px; text-align: center; border: 1px solid #E62F6E;">
+                        <div style="font-size: 24px; font-weight: 500; color: #E62F6E;" id="faultyJamboxes">0</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Faulty</div>
+                    </div>
+                </div>
+
+                <!-- JamBox Registry Table -->
+                <div style="background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--bg-card); border-bottom: 1px solid var(--border-color);">
+                                <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">JamBox ID</th>
+                                <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Status</th>
+                                <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Location</th>
+                                <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Last Updated</th>
+                                <th style="padding: 12px 16px; text-align: right; font-weight: 500; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registryTableBody">
+                            <!-- JamBox rows will be rendered here -->
+                        </tbody>
+                    </table>
+                    <div id="emptyRegistryMessage" style="padding: 48px; text-align: center; color: var(--text-secondary);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 16px; opacity: 0.3;">
+                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                            <path d="M16 3h2a2 2 0 0 1 2 2v2M8 3H6a2 2 0 0 0-2 2v2"/>
+                        </svg>
+                        <p>No JamBoxes registered yet.</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Click "Add JamBox" to register your first device.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Management Section (now Cable Stock) -->
+            <div class="tab-content" id="stockTab">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
                     <!-- Add Stock Form -->
                     <div class="form-section">

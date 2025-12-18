@@ -1413,6 +1413,7 @@ class InventoryManager {
         this.inventory = this.loadInventory();
         this.shipments = this.loadShipments();
         this.history = this.loadHistory();
+        this.jamboxRegistry = this.loadJamboxRegistry();
         this.init();
     }
 
@@ -1431,6 +1432,11 @@ class InventoryManager {
         return data ? JSON.parse(data) : [];
     }
 
+    loadJamboxRegistry() {
+        const data = localStorage.getItem('datajam_jambox_registry');
+        return data ? JSON.parse(data) : [];
+    }
+
     saveInventory() {
         StorageUtil.safeSet('datajam_inventory', JSON.stringify(this.inventory));
     }
@@ -1443,12 +1449,18 @@ class InventoryManager {
         StorageUtil.safeSet('datajam_inventory_history', JSON.stringify(this.history));
     }
 
+    saveJamboxRegistry() {
+        StorageUtil.safeSet('datajam_jambox_registry', JSON.stringify(this.jamboxRegistry));
+    }
+
     init() {
         this.updateStats();
         this.setupTabSwitching();
         this.setupForms();
+        this.setupJamboxRegistry();
         this.renderShipments();
         this.renderHistory();
+        this.renderJamboxRegistry();
     }
 
     updateStats() {
@@ -1960,6 +1972,368 @@ class InventoryManager {
         this.saveHistory();
         this.renderHistory();
         alert('History cleared');
+    }
+
+    // ========================================
+    // JAMBOX REGISTRY METHODS
+    // ========================================
+
+    setupJamboxRegistry() {
+        // Add JamBox button
+        const addBtn = document.getElementById('addJamboxBtn');
+        const addForm = document.getElementById('addJamboxForm');
+        const cancelBtn = document.getElementById('cancelAddJambox');
+        const jamboxForm = document.getElementById('jamboxForm');
+
+        if (addBtn && addForm) {
+            addBtn.addEventListener('click', () => {
+                addForm.style.display = 'block';
+                addBtn.style.display = 'none';
+                document.getElementById('jamboxId').focus();
+            });
+        }
+
+        if (cancelBtn && addForm && addBtn) {
+            cancelBtn.addEventListener('click', () => {
+                addForm.style.display = 'none';
+                addBtn.style.display = 'inline-flex';
+                jamboxForm.reset();
+            });
+        }
+
+        if (jamboxForm) {
+            jamboxForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleAddJambox();
+            });
+        }
+
+        // Filter and search
+        const filterSelect = document.getElementById('registryFilter');
+        const searchInput = document.getElementById('registrySearch');
+
+        if (filterSelect) {
+            filterSelect.addEventListener('change', () => this.renderJamboxRegistry());
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', () => this.renderJamboxRegistry());
+        }
+    }
+
+    handleAddJambox() {
+        const id = document.getElementById('jamboxId').value.trim();
+        const status = document.getElementById('jamboxStatus').value;
+        const notes = document.getElementById('jamboxNotes').value.trim();
+
+        if (!id) {
+            alert('Please enter a JamBox ID');
+            return;
+        }
+
+        // Check for duplicate ID
+        if (this.jamboxRegistry.some(jb => jb.id.toLowerCase() === id.toLowerCase())) {
+            alert(`JamBox ${id} already exists in the registry`);
+            return;
+        }
+
+        // Create new JamBox entry
+        const jambox = {
+            id: id,
+            status: status,
+            addedDate: new Date().toISOString().split('T')[0],
+            shippedTo: null,
+            shippedDate: null,
+            installedAt: null,
+            installedDate: null,
+            notes: notes,
+            lastUpdated: new Date().toISOString()
+        };
+
+        this.jamboxRegistry.push(jambox);
+        this.saveJamboxRegistry();
+
+        // Add to history
+        this.history.unshift({
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            type: 'jambox',
+            action: 'add',
+            quantity: 1,
+            jamboxId: id,
+            notes: `Added JamBox ${id} to registry (${status})`,
+            user: SessionManager.getCurrentUser() || 'Alex'
+        });
+        this.saveHistory();
+
+        // Update UI
+        this.renderJamboxRegistry();
+        this.renderHistory();
+        this.updateStats();
+
+        // Reset and hide form
+        document.getElementById('jamboxForm').reset();
+        document.getElementById('addJamboxForm').style.display = 'none';
+        document.getElementById('addJamboxBtn').style.display = 'inline-flex';
+
+        alert(`JamBox ${id} added to registry`);
+    }
+
+    updateJamboxStatus(jamboxId, newStatus, details = {}) {
+        const jambox = this.jamboxRegistry.find(jb => jb.id === jamboxId);
+        if (!jambox) return false;
+
+        const oldStatus = jambox.status;
+        jambox.status = newStatus;
+        jambox.lastUpdated = new Date().toISOString();
+
+        // Update additional fields based on status
+        if (newStatus === 'shipped' && details.destination) {
+            jambox.shippedTo = details.destination;
+            jambox.shippedDate = details.date || new Date().toISOString().split('T')[0];
+        } else if (newStatus === 'installed' && details.installationId) {
+            jambox.installedAt = details.installationId;
+            jambox.installedDate = details.date || new Date().toISOString().split('T')[0];
+        } else if (newStatus === 'in_stock') {
+            // Reset shipping/installation data when returned to stock
+            jambox.shippedTo = null;
+            jambox.shippedDate = null;
+            jambox.installedAt = null;
+            jambox.installedDate = null;
+        }
+
+        if (details.notes) {
+            jambox.notes = details.notes;
+        }
+
+        this.saveJamboxRegistry();
+
+        // Add to history
+        this.history.unshift({
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            type: 'jambox',
+            action: 'status_change',
+            quantity: 1,
+            jamboxId: jamboxId,
+            notes: `Status changed: ${oldStatus} → ${newStatus}${details.destination ? ` (${details.destination})` : ''}`,
+            user: SessionManager.getCurrentUser() || 'Alex'
+        });
+        this.saveHistory();
+
+        this.renderJamboxRegistry();
+        this.renderHistory();
+        return true;
+    }
+
+    getJamboxesByStatus(status) {
+        if (status === 'all') return this.jamboxRegistry;
+        return this.jamboxRegistry.filter(jb => jb.status === status);
+    }
+
+    getJamboxById(id) {
+        return this.jamboxRegistry.find(jb => jb.id === id);
+    }
+
+    renderJamboxRegistry() {
+        const tbody = document.getElementById('registryTableBody');
+        const emptyMsg = document.getElementById('emptyRegistryMessage');
+        if (!tbody) return;
+
+        // Get filter and search values
+        const filterValue = document.getElementById('registryFilter')?.value || 'all';
+        const searchValue = document.getElementById('registrySearch')?.value.toLowerCase() || '';
+
+        // Filter jamboxes
+        let filtered = this.getJamboxesByStatus(filterValue);
+        if (searchValue) {
+            filtered = filtered.filter(jb =>
+                jb.id.toLowerCase().includes(searchValue) ||
+                (jb.shippedTo && jb.shippedTo.toLowerCase().includes(searchValue)) ||
+                (jb.notes && jb.notes.toLowerCase().includes(searchValue))
+            );
+        }
+
+        // Update registry stats
+        this.updateRegistryStats();
+
+        // Show/hide empty message
+        if (emptyMsg) {
+            emptyMsg.style.display = filtered.length === 0 ? 'block' : 'none';
+        }
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            return;
+        }
+
+        // Sort by last updated (most recent first)
+        filtered.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+
+        tbody.innerHTML = filtered.map(jb => {
+            const statusColors = {
+                'in_stock': { bg: '#6B728020', color: '#6B7280', label: 'In Stock' },
+                'shipped': { bg: '#F59E0B20', color: '#F59E0B', label: 'Shipped' },
+                'installed': { bg: '#3B82F620', color: '#3B82F6', label: 'Installed' },
+                'active': { bg: '#10B98120', color: '#10B981', label: 'Active' },
+                'faulty': { bg: '#E62F6E20', color: '#E62F6E', label: 'Faulty' }
+            };
+            const status = statusColors[jb.status] || statusColors['in_stock'];
+            const location = jb.shippedTo || 'Warehouse';
+            const lastUpdated = new Date(jb.lastUpdated).toLocaleDateString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            });
+
+            return `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 12px 16px; font-weight: 500;">${this.escapeHtml(jb.id)}</td>
+                    <td style="padding: 12px 16px;">
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: ${status.bg}; color: ${status.color};">
+                            ${status.label}
+                        </span>
+                    </td>
+                    <td style="padding: 12px 16px; color: var(--text-secondary);">${this.escapeHtml(location)}</td>
+                    <td style="padding: 12px 16px; color: var(--text-secondary); font-size: 13px;">${lastUpdated}</td>
+                    <td style="padding: 12px 16px; text-align: right;">
+                        <button onclick="inventoryManager.showJamboxEditModal('${jb.id}')"
+                                style="padding: 6px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); cursor: pointer; font-size: 13px;">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    updateRegistryStats() {
+        const total = this.jamboxRegistry.length;
+        const inStock = this.jamboxRegistry.filter(jb => jb.status === 'in_stock').length;
+        const shipped = this.jamboxRegistry.filter(jb => jb.status === 'shipped').length;
+        const installed = this.jamboxRegistry.filter(jb => jb.status === 'installed' || jb.status === 'active').length;
+        const faulty = this.jamboxRegistry.filter(jb => jb.status === 'faulty').length;
+
+        const els = {
+            totalJamboxes: document.getElementById('totalJamboxes'),
+            inStockJamboxes: document.getElementById('inStockJamboxes'),
+            shippedJamboxes: document.getElementById('shippedJamboxes'),
+            installedJamboxes: document.getElementById('installedJamboxes'),
+            faultyJamboxes: document.getElementById('faultyJamboxes')
+        };
+
+        if (els.totalJamboxes) els.totalJamboxes.textContent = total;
+        if (els.inStockJamboxes) els.inStockJamboxes.textContent = inStock;
+        if (els.shippedJamboxes) els.shippedJamboxes.textContent = shipped;
+        if (els.installedJamboxes) els.installedJamboxes.textContent = installed;
+        if (els.faultyJamboxes) els.faultyJamboxes.textContent = faulty;
+
+        // Also update the main stat card
+        const jamboxStock = document.getElementById('jamboxStock');
+        if (jamboxStock) {
+            jamboxStock.textContent = inStock;
+        }
+    }
+
+    showJamboxEditModal(jamboxId) {
+        const jb = this.getJamboxById(jamboxId);
+        if (!jb) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); display: flex; align-items: center;
+            justify-content: center; z-index: 1000;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 32px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                <h2 style="margin-bottom: 24px; color: var(--datajam-pink);">Edit JamBox: ${this.escapeHtml(jb.id)}</h2>
+                <form id="editJamboxForm">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Status</label>
+                        <select id="editJamboxStatus" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                            <option value="in_stock" ${jb.status === 'in_stock' ? 'selected' : ''}>In Stock</option>
+                            <option value="shipped" ${jb.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="installed" ${jb.status === 'installed' ? 'selected' : ''}>Installed</option>
+                            <option value="active" ${jb.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="faulty" ${jb.status === 'faulty' ? 'selected' : ''}>Faulty</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Location / Shipped To</label>
+                        <input type="text" id="editJamboxLocation" value="${this.escapeHtml(jb.shippedTo || '')}"
+                               placeholder="Project or client name"
+                               style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Notes</label>
+                        <textarea id="editJamboxNotes" rows="3"
+                                  style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); resize: vertical;">${this.escapeHtml(jb.notes || '')}</textarea>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button type="submit" class="btn-primary" style="flex: 1;">Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <button type="button" class="btn-delete" onclick="inventoryManager.deleteJambox('${jb.id}')">Delete</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+
+        // Handle form submit
+        document.getElementById('editJamboxForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newStatus = document.getElementById('editJamboxStatus').value;
+            const location = document.getElementById('editJamboxLocation').value.trim();
+            const notes = document.getElementById('editJamboxNotes').value.trim();
+
+            this.updateJamboxStatus(jamboxId, newStatus, {
+                destination: location,
+                notes: notes
+            });
+
+            modal.remove();
+            alert('JamBox updated successfully');
+        });
+    }
+
+    deleteJambox(jamboxId) {
+        if (!confirm(`Are you sure you want to delete JamBox ${jamboxId}? This cannot be undone.`)) return;
+
+        const index = this.jamboxRegistry.findIndex(jb => jb.id === jamboxId);
+        if (index === -1) return;
+
+        this.jamboxRegistry.splice(index, 1);
+        this.saveJamboxRegistry();
+
+        // Add to history
+        this.history.unshift({
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            type: 'jambox',
+            action: 'remove',
+            quantity: 1,
+            jamboxId: jamboxId,
+            notes: `Deleted JamBox ${jamboxId} from registry`,
+            user: SessionManager.getCurrentUser() || 'Alex'
+        });
+        this.saveHistory();
+
+        // Close modal if open
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
+
+        this.renderJamboxRegistry();
+        this.renderHistory();
+        this.updateStats();
+
+        alert(`JamBox ${jamboxId} has been deleted`);
     }
 
     escapeHtml(text) {
