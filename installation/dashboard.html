@@ -128,7 +128,8 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-value" id="totalJamboxes">0</div>
-                        <div class="stat-label">JamBoxes Deployed</div>
+                        <div class="stat-label">JamBoxes Registered</div>
+                        <div class="stat-breakdown" id="jamboxBreakdown" style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;"></div>
                     </div>
                 </a>
 
@@ -257,10 +258,15 @@
             calculateStats() {
                 const total = this.installations.length;
 
-                // Count JamBoxes (installations with jamboxId)
-                const jamboxes = this.installations.filter(i =>
-                    i.jamboxId && i.jamboxId.trim() !== ''
-                ).length;
+                // Load JamBox registry for status breakdown
+                const registry = this.loadJamboxRegistry();
+                const totalRegistered = registry.length;
+
+                // Count by status
+                const inStock = registry.filter(jb => jb.status === 'in_stock').length;
+                const shipped = registry.filter(jb => jb.status === 'shipped').length;
+                const installed = registry.filter(jb => jb.status === 'installed' || jb.status === 'active').length;
+                const faulty = registry.filter(jb => jb.status === 'faulty').length;
 
                 // Count active projects (unique projects with installations)
                 const projects = new Set(
@@ -280,9 +286,34 @@
 
                 // Update DOM
                 document.getElementById('totalInstalls').textContent = total;
-                document.getElementById('totalJamboxes').textContent = jamboxes;
+                document.getElementById('totalJamboxes').textContent = totalRegistered;
                 document.getElementById('activeProjects').textContent = activeProjects;
                 document.getElementById('recentInstalls').textContent = thisWeek;
+
+                // Show JamBox breakdown if registry has data
+                const breakdownEl = document.getElementById('jamboxBreakdown');
+                if (breakdownEl) {
+                    if (totalRegistered > 0) {
+                        const parts = [];
+                        if (inStock > 0) parts.push(`<span style="color: #6B7280;">${inStock} stock</span>`);
+                        if (shipped > 0) parts.push(`<span style="color: #F59E0B;">${shipped} shipped</span>`);
+                        if (installed > 0) parts.push(`<span style="color: #14B8A6;">${installed} installed</span>`);
+                        if (faulty > 0) parts.push(`<span style="color: #E62F6E;">${faulty} faulty</span>`);
+                        breakdownEl.innerHTML = parts.join(' | ');
+                    } else {
+                        breakdownEl.innerHTML = '<span style="opacity: 0.5;">No JamBoxes in registry</span>';
+                    }
+                }
+            }
+
+            loadJamboxRegistry() {
+                try {
+                    const data = localStorage.getItem('datajam_jambox_registry');
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    console.error('Error loading JamBox registry:', error);
+                    return [];
+                }
             }
 
             renderRecentInstalls() {
