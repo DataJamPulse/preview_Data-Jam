@@ -3,12 +3,6 @@
 [build]
   publish = "."
 
-# Disable Pretty URLs to prevent href transformation
-[build.processing]
-  skip_processing = false
-[build.processing.html]
-  pretty_urls = false
-
 # Function configuration - increase timeout for slow external APIs
 [functions]
   node_bundler = "esbuild"
