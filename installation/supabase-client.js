@@ -12,6 +12,7 @@ class SupabaseClient {
     this.isOnline = navigator.onLine;
     this.syncQueue = [];
     this.initialized = false;
+    this._initializing = false; // Guard against concurrent init calls
 
     // Listen for online/offline events
     window.addEventListener('online', () => this.handleOnline());
@@ -20,22 +21,28 @@ class SupabaseClient {
 
   async init() {
     if (this.initialized) return;
+    if (this._initializing) return; // Prevent concurrent initialization
+    this._initializing = true;
 
-    // Initialize Supabase client
-    this.client = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    try {
+      // Initialize Supabase client
+      this.client = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
-    // Load sync queue from IndexedDB
-    await this.loadSyncQueue();
+      // Load sync queue from IndexedDB
+      await this.loadSyncQueue();
 
-    // Realtime subscriptions disabled - not needed for installer app
-    // this.setupRealtimeSubscriptions();
+      // Realtime subscriptions disabled - not needed for installer app
+      // this.setupRealtimeSubscriptions();
 
-    this.initialized = true;
-    console.log('[Supabase] Client initialized');
+      this.initialized = true;
+      console.log('[Supabase] Client initialized');
 
-    // Sync any pending changes
-    if (this.isOnline) {
-      await this.processSyncQueue();
+      // Sync any pending changes
+      if (this.isOnline) {
+        await this.processSyncQueue();
+      }
+    } finally {
+      this._initializing = false;
     }
   }
 
@@ -348,17 +355,21 @@ class SupabaseClient {
 
   async updateJambox(id, updates) {
     try {
+      // Build update object with only defined fields to prevent overwriting existing data
+      const updatePayload = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.status !== undefined) updatePayload.status = updates.status;
+      if (updates.shippedTo !== undefined) updatePayload.shipped_to = updates.shippedTo;
+      if (updates.shippedDate !== undefined) updatePayload.shipped_date = updates.shippedDate;
+      if (updates.installedAt !== undefined) updatePayload.installation_id = updates.installedAt;
+      if (updates.installedDate !== undefined) updatePayload.installed_date = updates.installedDate;
+      if (updates.notes !== undefined) updatePayload.notes = updates.notes;
+
       const { error } = await this.client
         .from('jambox_registry')
-        .update({
-          status: updates.status,
-          shipped_to: updates.shippedTo,
-          shipped_date: updates.shippedDate,
-          installation_id: updates.installedAt,
-          installed_date: updates.installedDate,
-          notes: updates.notes,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', id);
 
       if (error) throw error;
@@ -445,7 +456,8 @@ class SupabaseClient {
           cable_qty: shipment.cableQty || 0,
           notes: shipment.notes,
           status: shipment.status,
-          delivered_at: shipment.deliveredAt
+          delivered_at: shipment.deliveredAt,
+          created_at: shipment.createdAt || new Date().toISOString()
         }, { onConflict: 'id' })
         .select()
         .single();
@@ -496,6 +508,7 @@ class SupabaseClient {
       const { error } = await this.client
         .from('inventory_history')
         .insert({
+          timestamp: entry.timestamp || new Date().toISOString(),
           action: entry.action,
           item_type: entry.type,
           jambox_id: entry.jamboxId,
