@@ -48,6 +48,13 @@
   - Select specific JamBox IDs when creating shipments
   - JamBoxes auto-marked as "shipped" when shipment created
   - Shipment records store array of JamBox IDs
+- ✅ **QA FIXES**
+  - `updateJambox()`: Only sends defined fields to prevent overwriting existing data with undefined
+  - `saveInventoryShipment()`: Added `created_at` field mapping
+  - `addInventoryHistoryEntry()`: Added `timestamp` field mapping
+  - `init()`: Added guard to prevent concurrent initialization race condition
+  - help.html: Added missing Users and Settings navigation links
+  - help.html: Removed internal roadmap text from Active status description
 
 **2025-12-16 - Security Hardening ROLLED BACK:**
 - ⚠️ **JWT/HTTP-ONLY COOKIE IMPLEMENTATION REVERTED**
