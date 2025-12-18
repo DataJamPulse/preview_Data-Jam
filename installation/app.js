@@ -2274,10 +2274,19 @@ class InventoryManager {
         const cancelBtn = document.getElementById('cancelAddJambox');
         const jamboxForm = document.getElementById('jamboxForm');
 
+        // Bulk Add button
+        const bulkAddBtn = document.getElementById('bulkAddJamboxBtn');
+        const bulkAddForm = document.getElementById('bulkAddJamboxForm');
+        const cancelBulkBtn = document.getElementById('cancelBulkAddJambox');
+        const bulkJamboxForm = document.getElementById('bulkJamboxForm');
+        const bulkIdsTextarea = document.getElementById('bulkJamboxIds');
+
         if (addBtn && addForm) {
             addBtn.addEventListener('click', () => {
                 addForm.style.display = 'block';
                 addBtn.style.display = 'none';
+                if (bulkAddBtn) bulkAddBtn.style.display = 'none';
+                if (bulkAddForm) bulkAddForm.style.display = 'none';
                 document.getElementById('jamboxId').focus();
             });
         }
@@ -2286,6 +2295,7 @@ class InventoryManager {
             cancelBtn.addEventListener('click', () => {
                 addForm.style.display = 'none';
                 addBtn.style.display = 'inline-flex';
+                if (bulkAddBtn) bulkAddBtn.style.display = 'inline-flex';
                 jamboxForm.reset();
             });
         }
@@ -2295,6 +2305,39 @@ class InventoryManager {
                 e.preventDefault();
                 this.handleAddJambox();
             });
+        }
+
+        // Bulk Add handlers
+        if (bulkAddBtn && bulkAddForm) {
+            bulkAddBtn.addEventListener('click', () => {
+                bulkAddForm.style.display = 'block';
+                bulkAddBtn.style.display = 'none';
+                if (addBtn) addBtn.style.display = 'none';
+                if (addForm) addForm.style.display = 'none';
+                bulkIdsTextarea?.focus();
+            });
+        }
+
+        if (cancelBulkBtn && bulkAddForm) {
+            cancelBulkBtn.addEventListener('click', () => {
+                bulkAddForm.style.display = 'none';
+                if (bulkAddBtn) bulkAddBtn.style.display = 'inline-flex';
+                if (addBtn) addBtn.style.display = 'inline-flex';
+                bulkJamboxForm?.reset();
+                this.updateBulkIdCount();
+            });
+        }
+
+        if (bulkJamboxForm) {
+            bulkJamboxForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleBulkAddJambox();
+            });
+        }
+
+        // Live count of IDs in bulk textarea
+        if (bulkIdsTextarea) {
+            bulkIdsTextarea.addEventListener('input', () => this.updateBulkIdCount());
         }
 
         // Filter and search
@@ -2308,6 +2351,123 @@ class InventoryManager {
         if (searchInput) {
             searchInput.addEventListener('input', () => this.renderJamboxRegistry());
         }
+    }
+
+    updateBulkIdCount() {
+        const textarea = document.getElementById('bulkJamboxIds');
+        const countEl = document.getElementById('bulkIdCount');
+        if (!textarea || !countEl) return;
+
+        const ids = textarea.value.split('\n').map(id => id.trim()).filter(id => id.length > 0);
+        const count = ids.length;
+
+        if (count > 500) {
+            countEl.innerHTML = `<span style="color: #E62F6E;">${count} IDs entered - Maximum 500 allowed!</span>`;
+        } else if (count > 0) {
+            countEl.innerHTML = `<span style="color: #14B8A6;">${count} ID${count !== 1 ? 's' : ''} entered</span>`;
+        } else {
+            countEl.textContent = '0 IDs entered';
+        }
+    }
+
+    handleBulkAddJambox() {
+        const idsText = document.getElementById('bulkJamboxIds').value;
+        const status = document.getElementById('bulkJamboxStatus').value;
+        const notes = document.getElementById('bulkJamboxNotes').value.trim();
+
+        // Parse IDs - one per line, trim whitespace, filter empty
+        const ids = idsText.split('\n')
+            .map(id => id.trim())
+            .filter(id => id.length > 0);
+
+        if (ids.length === 0) {
+            alert('Please enter at least one JamBox ID');
+            return;
+        }
+
+        if (ids.length > 500) {
+            alert(`Too many IDs (${ids.length}). Maximum is 500 at a time.`);
+            return;
+        }
+
+        // Check for duplicates in input
+        const uniqueIds = [...new Set(ids)];
+        const duplicatesInInput = ids.length - uniqueIds.length;
+
+        // Check for existing IDs in registry
+        const existingIds = uniqueIds.filter(id =>
+            this.jamboxRegistry.some(jb => jb.id.toLowerCase() === id.toLowerCase())
+        );
+
+        if (existingIds.length > 0) {
+            const proceed = confirm(
+                `${existingIds.length} ID(s) already exist in the registry:\n${existingIds.slice(0, 10).join(', ')}${existingIds.length > 10 ? '...' : ''}\n\nDo you want to skip these and add the rest?`
+            );
+            if (!proceed) return;
+        }
+
+        // Filter to only new IDs
+        const newIds = uniqueIds.filter(id =>
+            !this.jamboxRegistry.some(jb => jb.id.toLowerCase() === id.toLowerCase())
+        );
+
+        if (newIds.length === 0) {
+            alert('All IDs already exist in the registry. No new devices added.');
+            return;
+        }
+
+        // Add all new JamBoxes
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString();
+
+        newIds.forEach(id => {
+            this.jamboxRegistry.push({
+                id: id,
+                status: status,
+                addedDate: today,
+                shippedTo: null,
+                shippedDate: null,
+                installedAt: null,
+                installedDate: null,
+                notes: notes,
+                lastUpdated: now
+            });
+        });
+
+        this.saveJamboxRegistry();
+
+        // Add to history
+        this.history.unshift({
+            id: Date.now(),
+            timestamp: now,
+            type: 'jambox',
+            action: 'add',
+            quantity: newIds.length,
+            notes: `Bulk added ${newIds.length} JamBox(es)${notes ? ': ' + notes : ''}`,
+            user: SessionManager.getCurrentUser() || 'Alex'
+        });
+        this.saveHistory();
+
+        // Update UI
+        this.renderJamboxRegistry();
+        this.updateStats();
+
+        // Reset and hide form
+        document.getElementById('bulkJamboxForm').reset();
+        document.getElementById('bulkAddJamboxForm').style.display = 'none';
+        document.getElementById('addJamboxBtn').style.display = 'inline-flex';
+        document.getElementById('bulkAddJamboxBtn').style.display = 'inline-flex';
+        this.updateBulkIdCount();
+
+        // Show summary
+        let message = `Successfully added ${newIds.length} JamBox(es) to registry!`;
+        if (duplicatesInInput > 0) {
+            message += `\n\nNote: ${duplicatesInInput} duplicate(s) in your input were ignored.`;
+        }
+        if (existingIds.length > 0) {
+            message += `\n${existingIds.length} existing ID(s) were skipped.`;
+        }
+        alert(message);
     }
 
     handleAddJambox() {
