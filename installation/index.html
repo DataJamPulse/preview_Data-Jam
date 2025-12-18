@@ -331,7 +331,9 @@
 
                     <div class="form-group">
                         <label for="jamboxId">JamBox ID</label>
-                        <input type="text" id="jamboxId" name="jamboxId" placeholder="e.g., JB-0001">
+                        <input type="text" id="jamboxId" name="jamboxId" placeholder="Start typing to see shipped JamBoxes..." list="jamboxSuggestions" autocomplete="off">
+                        <datalist id="jamboxSuggestions"></datalist>
+                        <small id="jamboxHint">Select a project to see shipped JamBoxes, or enter any ID</small>
                     </div>
                 </div>
 

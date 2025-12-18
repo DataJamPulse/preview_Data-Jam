@@ -352,6 +352,9 @@ class InstallationManager {
         // Load and populate SSID history
         this.populateSSIDHistory();
 
+        // Set up JamBox autocomplete from registry
+        this.setupJamboxAutocomplete();
+
         this.setupEventListeners();
         this.updateFormTitle();
     }
@@ -538,6 +541,15 @@ class InstallationManager {
         try {
             await this.saveInstallation(installation);
             console.log('[Install] Saved successfully. Total installations:', this.installations.length);
+
+            // Update JamBox status to "installed" if a JamBox ID was provided
+            if (installation.jamboxId && installation.jamboxId.trim()) {
+                const updated = this.updateJamboxStatusOnInstall(installation.jamboxId.trim(), installation.id);
+                if (updated) {
+                    console.log('[Install] JamBox status updated to installed:', installation.jamboxId);
+                }
+            }
+
             this.showModal();
         } catch (error) {
             console.error('[Install] Save failed:', error);
@@ -718,6 +730,162 @@ class InstallationManager {
             option.value = ssid;
             datalist.appendChild(option);
         });
+    }
+
+    // ========================================
+    // JAMBOX AUTOCOMPLETE FOR INSTALLATIONS
+    // ========================================
+
+    loadJamboxRegistry() {
+        const data = localStorage.getItem('datajam_jambox_registry');
+        return data ? JSON.parse(data) : [];
+    }
+
+    setupJamboxAutocomplete() {
+        const projectSelect = document.getElementById('projectName');
+        const jamboxInput = document.getElementById('jamboxId');
+        const hintEl = document.getElementById('jamboxHint');
+
+        if (!jamboxInput) return;
+
+        // Initial population of JamBox suggestions
+        this.populateJamboxSuggestions();
+
+        // Update suggestions when project changes
+        if (projectSelect) {
+            projectSelect.addEventListener('change', () => {
+                this.populateJamboxSuggestions();
+            });
+        }
+
+        // Update hint when input changes
+        if (jamboxInput && hintEl) {
+            jamboxInput.addEventListener('input', () => {
+                const value = jamboxInput.value.trim();
+                const registry = this.loadJamboxRegistry();
+                const jambox = registry.find(jb => jb.id.toLowerCase() === value.toLowerCase());
+
+                if (jambox) {
+                    const statusLabels = {
+                        'in_stock': 'In Stock',
+                        'shipped': 'Shipped to ' + (jambox.shippedTo || 'unknown'),
+                        'installed': 'Already Installed',
+                        'active': 'Active',
+                        'faulty': 'Marked as Faulty'
+                    };
+                    hintEl.innerHTML = `<span style="color: ${jambox.status === 'shipped' ? '#14B8A6' : jambox.status === 'installed' ? '#F59E0B' : '#6B7280'};">Found: ${statusLabels[jambox.status] || jambox.status}</span>`;
+                } else if (value) {
+                    hintEl.innerHTML = '<span style="color: var(--text-secondary);">New JamBox ID (not in registry)</span>';
+                } else {
+                    hintEl.textContent = 'Select a project to see shipped JamBoxes, or enter any ID';
+                }
+            });
+        }
+    }
+
+    populateJamboxSuggestions() {
+        const datalist = document.getElementById('jamboxSuggestions');
+        const projectSelect = document.getElementById('projectName');
+        const hintEl = document.getElementById('jamboxHint');
+
+        if (!datalist) return;
+
+        const registry = this.loadJamboxRegistry();
+        const selectedProject = projectSelect?.value || '';
+
+        // Get JamBoxes that are "shipped" (available for installation)
+        let shippedJamboxes = registry.filter(jb => jb.status === 'shipped');
+
+        // If a project is selected, prioritize JamBoxes shipped to that project
+        if (selectedProject) {
+            // Get the display text of the selected option
+            const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+            const projectName = selectedOption?.text || selectedProject;
+
+            // Filter to show JamBoxes shipped to this project first
+            const forThisProject = shippedJamboxes.filter(jb =>
+                jb.shippedTo && (
+                    jb.shippedTo.toLowerCase().includes(projectName.toLowerCase()) ||
+                    projectName.toLowerCase().includes(jb.shippedTo.toLowerCase())
+                )
+            );
+
+            // Also include other shipped JamBoxes
+            const otherShipped = shippedJamboxes.filter(jb =>
+                !forThisProject.includes(jb)
+            );
+
+            // Sort: project matches first, then others
+            shippedJamboxes = [...forThisProject, ...otherShipped];
+
+            if (forThisProject.length > 0 && hintEl) {
+                hintEl.innerHTML = `<span style="color: #14B8A6;">${forThisProject.length} JamBox(es) shipped to ${projectName}</span>`;
+            } else if (hintEl) {
+                hintEl.textContent = shippedJamboxes.length > 0
+                    ? `${shippedJamboxes.length} shipped JamBox(es) available`
+                    : 'No shipped JamBoxes available - check inventory';
+            }
+        }
+
+        // Clear and populate datalist
+        datalist.innerHTML = '';
+
+        shippedJamboxes.forEach(jb => {
+            const option = document.createElement('option');
+            option.value = jb.id;
+            option.label = jb.shippedTo ? `${jb.id} (shipped to ${jb.shippedTo})` : jb.id;
+            datalist.appendChild(option);
+        });
+
+        // Also add "in_stock" JamBoxes as secondary options
+        const inStockJamboxes = registry.filter(jb => jb.status === 'in_stock');
+        inStockJamboxes.forEach(jb => {
+            const option = document.createElement('option');
+            option.value = jb.id;
+            option.label = `${jb.id} (in stock - not shipped)`;
+            datalist.appendChild(option);
+        });
+    }
+
+    updateJamboxStatusOnInstall(jamboxId, installationId) {
+        // Load registry directly and update
+        const registryData = localStorage.getItem('datajam_jambox_registry');
+        const registry = registryData ? JSON.parse(registryData) : [];
+
+        const jambox = registry.find(jb => jb.id.toLowerCase() === jamboxId.toLowerCase());
+        if (!jambox) {
+            console.log('[Install] JamBox not found in registry:', jamboxId);
+            return false;
+        }
+
+        // Update status to installed
+        jambox.status = 'installed';
+        jambox.installedAt = installationId;
+        jambox.installedDate = new Date().toISOString().split('T')[0];
+        jambox.lastUpdated = new Date().toISOString();
+
+        // Save registry
+        StorageUtil.safeSet('datajam_jambox_registry', JSON.stringify(registry));
+
+        // Add to inventory history
+        const historyData = localStorage.getItem('datajam_inventory_history');
+        const history = historyData ? JSON.parse(historyData) : [];
+
+        history.unshift({
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            type: 'jambox',
+            action: 'install',
+            quantity: 1,
+            jamboxId: jamboxId,
+            notes: `JamBox ${jamboxId} marked as installed`,
+            user: SessionManager.getCurrentUser() || 'Alex'
+        });
+
+        StorageUtil.safeSet('datajam_inventory_history', JSON.stringify(history));
+
+        console.log('[Install] Updated JamBox status to installed:', jamboxId);
+        return true;
     }
 }
 
