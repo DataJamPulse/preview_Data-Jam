@@ -277,96 +277,329 @@ class SupabaseClient {
   }
 
   // ========================================
-  // INVENTORY
+  // INVENTORY - NEW TABLES
   // ========================================
 
-  async getInventory() {
+  // --- JAMBOX REGISTRY ---
+  async getJamboxRegistry() {
     try {
       const { data, error } = await this.client
-        .from('installer_inventory')
-        .select('*');
+        .from('jambox_registry')
+        .select('*')
+        .order('added_date', { ascending: false });
 
       if (error) throw error;
-
-      // Convert to object format
-      const inventory = {};
-      (data || []).forEach(item => {
-        inventory[item.item_type] = item.quantity;
-      });
-
-      this.cacheData('inventory', inventory);
-      return inventory;
+      this.cacheData('jambox_registry', data);
+      return data || [];
     } catch (err) {
-      console.error('[Supabase] Get inventory error:', err);
-      return this.getCachedData('inventory') || { jambox: 0, cable: 0 };
+      console.error('[Supabase] Get JamBox registry error:', err);
+      return this.getCachedData('jambox_registry') || [];
     }
   }
 
-  async updateInventory(itemType, quantity, action, details = {}) {
+  async saveJamboxRegistry(jamboxes) {
     try {
-      const session = JSON.parse(localStorage.getItem('datajam_session'));
+      // Upsert all jamboxes (insert or update)
+      const { error } = await this.client
+        .from('jambox_registry')
+        .upsert(jamboxes.map(jb => ({
+          id: jb.id,
+          status: jb.status,
+          added_date: jb.addedDate,
+          shipped_to: jb.shippedTo,
+          shipped_date: jb.shippedDate,
+          installation_id: jb.installedAt,
+          installed_date: jb.installedDate,
+          notes: jb.notes,
+          updated_at: jb.lastUpdated || new Date().toISOString()
+        })), { onConflict: 'id' });
 
-      // Get current quantity
-      const { data: current } = await this.client
-        .from('installer_inventory')
-        .select('quantity')
-        .eq('item_type', itemType)
-        .single();
-
-      const previousQty = current?.quantity || 0;
-      let newQty = previousQty;
-
-      if (action === 'add') {
-        newQty = previousQty + quantity;
-      } else if (action === 'remove' || action === 'ship') {
-        newQty = Math.max(0, previousQty - quantity);
-      } else if (action === 'adjust') {
-        newQty = quantity;
-      }
-
-      // Update inventory
-      const { error: updateError } = await this.client
-        .from('installer_inventory')
-        .update({ quantity: newQty })
-        .eq('item_type', itemType);
-
-      if (updateError) throw updateError;
-
-      // Log to history
-      await this.client
-        .from('installer_inventory_history')
-        .insert({
-          item_type: itemType,
-          action: action,
-          quantity: quantity,
-          previous_qty: previousQty,
-          new_qty: newQty,
-          destination: details.destination,
-          reason: details.reason,
-          notes: details.notes,
-          performed_by: session?.userId
-        });
-
-      return { success: true, newQty };
+      if (error) throw error;
+      console.log('[Supabase] JamBox registry saved');
+      return { success: true };
     } catch (err) {
-      console.error('[Supabase] Update inventory error:', err);
+      console.error('[Supabase] Save JamBox registry error:', err);
       return { success: false, error: err.message };
     }
   }
 
+  async addJambox(jambox) {
+    try {
+      const { error } = await this.client
+        .from('jambox_registry')
+        .insert({
+          id: jambox.id,
+          status: jambox.status,
+          added_date: jambox.addedDate,
+          shipped_to: jambox.shippedTo,
+          shipped_date: jambox.shippedDate,
+          installation_id: jambox.installedAt,
+          installed_date: jambox.installedDate,
+          notes: jambox.notes
+        });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('[Supabase] Add JamBox error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async updateJambox(id, updates) {
+    try {
+      const { error } = await this.client
+        .from('jambox_registry')
+        .update({
+          status: updates.status,
+          shipped_to: updates.shippedTo,
+          shipped_date: updates.shippedDate,
+          installation_id: updates.installedAt,
+          installed_date: updates.installedDate,
+          notes: updates.notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('[Supabase] Update JamBox error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async deleteJambox(id) {
+    try {
+      const { error } = await this.client
+        .from('jambox_registry')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('[Supabase] Delete JamBox error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  // --- CABLE STOCK ---
+  async getCableStock() {
+    try {
+      const { data, error } = await this.client
+        .from('inventory_stock')
+        .select('quantity')
+        .eq('item_type', 'cable')
+        .single();
+
+      if (error) throw error;
+      return data?.quantity || 0;
+    } catch (err) {
+      console.error('[Supabase] Get cable stock error:', err);
+      return 0;
+    }
+  }
+
+  async updateCableStock(quantity) {
+    try {
+      const { error } = await this.client
+        .from('inventory_stock')
+        .update({ quantity, updated_at: new Date().toISOString() })
+        .eq('item_type', 'cable');
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('[Supabase] Update cable stock error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  // --- SHIPMENTS ---
+  async getInventoryShipments() {
+    try {
+      const { data, error } = await this.client
+        .from('inventory_shipments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      this.cacheData('inventory_shipments', data);
+      return data || [];
+    } catch (err) {
+      console.error('[Supabase] Get shipments error:', err);
+      return this.getCachedData('inventory_shipments') || [];
+    }
+  }
+
+  async saveInventoryShipment(shipment) {
+    try {
+      const { data, error } = await this.client
+        .from('inventory_shipments')
+        .upsert({
+          id: shipment.id,
+          destination: shipment.destination,
+          ship_date: shipment.date,
+          jambox_ids: shipment.jamboxIds || [],
+          cable_qty: shipment.cableQty || 0,
+          notes: shipment.notes,
+          status: shipment.status,
+          delivered_at: shipment.deliveredAt
+        }, { onConflict: 'id' })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (err) {
+      console.error('[Supabase] Save shipment error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async deleteInventoryShipment(id) {
+    try {
+      const { error } = await this.client
+        .from('inventory_shipments')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('[Supabase] Delete shipment error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  // --- INVENTORY HISTORY ---
   async getInventoryHistory() {
     try {
       const { data, error } = await this.client
-        .from('installer_inventory_history')
+        .from('inventory_history')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
+        .order('timestamp', { ascending: false })
+        .limit(200);
 
       if (error) throw error;
+      this.cacheData('inventory_history', data);
       return data || [];
     } catch (err) {
       console.error('[Supabase] Get inventory history error:', err);
-      return [];
+      return this.getCachedData('inventory_history') || [];
+    }
+  }
+
+  async addInventoryHistoryEntry(entry) {
+    try {
+      const { error } = await this.client
+        .from('inventory_history')
+        .insert({
+          action: entry.action,
+          item_type: entry.type,
+          jambox_id: entry.jamboxId,
+          quantity: entry.quantity,
+          destination: entry.destination,
+          reason: entry.reason,
+          notes: entry.notes,
+          user_name: entry.user
+        });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('[Supabase] Add history entry error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  // --- FULL INVENTORY SYNC ---
+  async syncInventoryToSupabase(localData) {
+    console.log('[Supabase] Starting full inventory sync...');
+    const results = { success: true, errors: [] };
+
+    try {
+      // Sync JamBox registry
+      if (localData.jamboxRegistry && localData.jamboxRegistry.length > 0) {
+        const regResult = await this.saveJamboxRegistry(localData.jamboxRegistry);
+        if (!regResult.success) results.errors.push('JamBox registry: ' + regResult.error);
+      }
+
+      // Sync cable stock
+      if (localData.cableStock !== undefined) {
+        const cableResult = await this.updateCableStock(localData.cableStock);
+        if (!cableResult.success) results.errors.push('Cable stock: ' + cableResult.error);
+      }
+
+      // Sync shipments
+      if (localData.shipments && localData.shipments.length > 0) {
+        for (const shipment of localData.shipments) {
+          const shipResult = await this.saveInventoryShipment(shipment);
+          if (!shipResult.success) results.errors.push('Shipment ' + shipment.id + ': ' + shipResult.error);
+        }
+      }
+
+      results.success = results.errors.length === 0;
+      console.log('[Supabase] Inventory sync complete', results);
+      return results;
+    } catch (err) {
+      console.error('[Supabase] Full sync error:', err);
+      return { success: false, errors: [err.message] };
+    }
+  }
+
+  async loadInventoryFromSupabase() {
+    console.log('[Supabase] Loading inventory from cloud...');
+    try {
+      const [jamboxRegistry, cableStock, shipments, history] = await Promise.all([
+        this.getJamboxRegistry(),
+        this.getCableStock(),
+        this.getInventoryShipments(),
+        this.getInventoryHistory()
+      ]);
+
+      return {
+        jamboxRegistry: jamboxRegistry.map(jb => ({
+          id: jb.id,
+          status: jb.status,
+          addedDate: jb.added_date,
+          shippedTo: jb.shipped_to,
+          shippedDate: jb.shipped_date,
+          installedAt: jb.installation_id,
+          installedDate: jb.installed_date,
+          notes: jb.notes,
+          lastUpdated: jb.updated_at
+        })),
+        cableStock,
+        shipments: shipments.map(s => ({
+          id: s.id,
+          destination: s.destination,
+          date: s.ship_date,
+          jamboxIds: s.jambox_ids || [],
+          jamboxQty: s.jambox_ids?.length || 0,
+          cableQty: s.cable_qty,
+          notes: s.notes,
+          status: s.status,
+          createdAt: s.created_at,
+          deliveredAt: s.delivered_at
+        })),
+        history: history.map(h => ({
+          id: h.id,
+          timestamp: h.timestamp,
+          action: h.action,
+          type: h.item_type,
+          jamboxId: h.jambox_id,
+          quantity: h.quantity,
+          destination: h.destination,
+          reason: h.reason,
+          notes: h.notes,
+          user: h.user_name
+        }))
+      };
+    } catch (err) {
+      console.error('[Supabase] Load inventory error:', err);
+      return null;
     }
   }
 

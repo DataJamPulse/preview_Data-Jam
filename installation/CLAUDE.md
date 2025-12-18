@@ -11,6 +11,44 @@
 
 ## Recent Updates
 
+**2025-12-17 - JamBox Registry, Help Guide & Supabase Sync:**
+- ✅ **JAMBOX REGISTRY SYSTEM**
+  - Individual tracking for each JamBox device with serial numbers
+  - JamBox lifecycle states: in_stock → shipped → installed → active → faulty
+  - Registry tab in Inventory page with table view
+  - Quick filters: All, In Stock, Shipped, Installed, Faulty
+  - Color-coded status badges (gray, yellow, blue, green, red)
+  - Edit JamBox status and notes inline
+- ✅ **BULK JAMBOX UPLOAD**
+  - Add 1-500 JamBox IDs at a time via textarea
+  - One ID per line, validates duplicates
+  - Skip existing option to avoid duplicates
+  - Live count of IDs entered
+- ✅ **HOW-TO GUIDE PAGE**
+  - New help.html with comprehensive documentation
+  - Explains JamBox lifecycle, shipments, installations
+  - Step-by-step guides for all operations
+  - Linked from all page sidebars
+- ✅ **SUPABASE CLOUD SYNC FOR INVENTORY**
+  - New Supabase tables: jambox_registry, inventory_stock, inventory_shipments, inventory_history
+  - Data syncs automatically to cloud on every save
+  - Loads from Supabase on page init (with localStorage fallback)
+  - Works offline - syncs when back online
+  - Methods added to supabase-client.js:
+    - `getJamboxRegistry()`, `saveJamboxRegistry()`, `addJambox()`, `updateJambox()`, `deleteJambox()`
+    - `getCableStock()`, `updateCableStock()`
+    - `getInventoryShipments()`, `saveInventoryShipment()`, `deleteInventoryShipment()`
+    - `getInventoryHistory()`, `addInventoryHistoryEntry()`
+    - `syncInventoryToSupabase()`, `loadInventoryFromSupabase()`
+  - InventoryManager sync methods:
+    - `syncCableStockToSupabase()`, `syncShipmentsToSupabase()`
+    - `syncJamboxRegistryToSupabase()`, `syncHistoryEntryToSupabase()`
+    - `loadFromSupabase()`
+- ✅ **SHIPMENT-TO-JAMBOX LINKING**
+  - Select specific JamBox IDs when creating shipments
+  - JamBoxes auto-marked as "shipped" when shipment created
+  - Shipment records store array of JamBox IDs
+
 **2025-12-16 - Security Hardening ROLLED BACK:**
 - ⚠️ **JWT/HTTP-ONLY COOKIE IMPLEMENTATION REVERTED**
   - The security hardening changes caused 502 Bad Gateway errors
@@ -368,11 +406,13 @@ installation_web_app/
 ├── dashboard.html         # Dashboard/homepage with stats and recent activity
 ├── index.html             # New installation form page
 ├── installations.html     # View all installations with search/filter
-├── inventory.html         # Inventory management with stock tracking and shipments
+├── inventory.html         # Inventory management with stock tracking, JamBox registry, and shipments
+├── help.html              # How-to guide with JamBox lifecycle documentation
 ├── print-preview.html     # Print-friendly installation report view
 ├── projects.html          # All DataJam Portal projects (139 projects)
 ├── style.css              # All styling with DataJam branding
 ├── app.js                 # All JavaScript functionality
+├── supabase-client.js     # Supabase database client with inventory sync methods
 ├── logo.jpg               # DataJam official logo
 └── .git/                  # Git repository
 ```
@@ -406,12 +446,30 @@ installation_web_app/
 **inventory.html**
 - Inventory management and stock tracking
 - 4 stat cards (JamBox Stock, Cable Stock, Active Shipments, Total Deployed)
-- Three tabs: Stock Management, Shipments, History
+- Four tabs: JamBox Registry, Stock Management, Shipments, History
+- JamBox Registry tab:
+  - Individual tracking for each JamBox with serial number
+  - Status filters (All, In Stock, Shipped, Installed, Faulty)
+  - Add JamBox (single) and Bulk Add (1-500 at a time)
+  - Edit status and notes inline
+  - Color-coded status badges
 - Add/Remove stock forms with quantity and notes
-- Create shipments with destination and item quantities
+- Create shipments with specific JamBox ID selection
 - Track active vs delivered shipments
 - Full audit history of all stock movements
+- Supabase cloud sync for all inventory data
 - Export inventory history to CSV
+
+**help.html**
+- How-to guide for the installer portal
+- Explains JamBox lifecycle (in_stock → shipped → installed → active → faulty)
+- Step-by-step guides for:
+  - Adding JamBoxes (single and bulk)
+  - Creating shipments
+  - Recording installations
+  - Managing stock
+- Tips and best practices
+- Linked from sidebar on all pages
 
 **print-preview.html**
 - Print-friendly installation report view
@@ -462,14 +520,23 @@ installation_web_app/
   - Render recent installations
   - Storage usage calculation
 - `InventoryManager` class - handles inventory page
+  - JamBox Registry management (individual device tracking)
+  - Bulk JamBox upload (1-500 at a time)
+  - JamBox lifecycle states: in_stock, shipped, installed, active, faulty
   - Load and manage inventory stock (JamBox and cables)
   - Add/Remove stock with quantity tracking
-  - Create and manage shipments with destinations
+  - Create and manage shipments with specific JamBox IDs
   - Mark shipments as delivered
   - Render shipment cards with active/delivered status
   - Full audit history of all stock movements
   - Export inventory history to CSV
-  - Tab switching for Stock/Shipments/History views
+  - Tab switching for Registry/Stock/Shipments/History views
+  - **Supabase sync methods:**
+    - `syncCableStockToSupabase()` - sync cable count to cloud
+    - `syncShipmentsToSupabase()` - sync all shipments to cloud
+    - `syncJamboxRegistryToSupabase()` - sync JamBox registry to cloud
+    - `syncHistoryEntryToSupabase()` - sync individual history entries
+    - `loadFromSupabase()` - load inventory data from cloud on init
 - No external dependencies except html2pdf.js (loaded on-demand for PDF generation)
 
 ## Design System (DataJam Brand Guidelines)

@@ -1607,21 +1607,126 @@ class InventoryManager {
 
     saveInventory() {
         StorageUtil.safeSet('datajam_inventory', JSON.stringify(this.inventory));
+        // Sync cable stock to Supabase
+        this.syncCableStockToSupabase();
     }
 
     saveShipments() {
         StorageUtil.safeSet('datajam_shipments', JSON.stringify(this.shipments));
+        // Sync shipments to Supabase
+        this.syncShipmentsToSupabase();
     }
 
     saveHistory() {
         StorageUtil.safeSet('datajam_inventory_history', JSON.stringify(this.history));
+        // Note: History syncs individually when entries are added
     }
 
     saveJamboxRegistry() {
         StorageUtil.safeSet('datajam_jambox_registry', JSON.stringify(this.jamboxRegistry));
+        // Sync JamBox registry to Supabase
+        this.syncJamboxRegistryToSupabase();
+    }
+
+    // ========================================
+    // SUPABASE SYNC METHODS
+    // ========================================
+
+    async syncCableStockToSupabase() {
+        if (typeof db === 'undefined' || !db.initialized) return;
+        try {
+            await db.updateCableStock(this.inventory.cable);
+            console.log('[Inventory] Cable stock synced to Supabase');
+        } catch (err) {
+            console.error('[Inventory] Cable stock sync failed:', err);
+        }
+    }
+
+    async syncShipmentsToSupabase() {
+        if (typeof db === 'undefined' || !db.initialized) return;
+        try {
+            // Sync all shipments
+            for (const shipment of this.shipments) {
+                await db.saveInventoryShipment(shipment);
+            }
+            console.log('[Inventory] Shipments synced to Supabase');
+        } catch (err) {
+            console.error('[Inventory] Shipments sync failed:', err);
+        }
+    }
+
+    async syncJamboxRegistryToSupabase() {
+        if (typeof db === 'undefined' || !db.initialized) return;
+        try {
+            await db.saveJamboxRegistry(this.jamboxRegistry);
+            console.log('[Inventory] JamBox registry synced to Supabase');
+        } catch (err) {
+            console.error('[Inventory] JamBox registry sync failed:', err);
+        }
+    }
+
+    async syncHistoryEntryToSupabase(entry) {
+        if (typeof db === 'undefined' || !db.initialized) return;
+        try {
+            await db.addInventoryHistoryEntry(entry);
+            console.log('[Inventory] History entry synced to Supabase');
+        } catch (err) {
+            console.error('[Inventory] History entry sync failed:', err);
+        }
+    }
+
+    async loadFromSupabase() {
+        if (typeof db === 'undefined') {
+            console.log('[Inventory] Supabase not available, using localStorage');
+            return false;
+        }
+
+        try {
+            // Wait for db to be initialized
+            if (!db.initialized) {
+                await db.init();
+            }
+
+            console.log('[Inventory] Loading data from Supabase...');
+            const cloudData = await db.loadInventoryFromSupabase();
+
+            if (cloudData) {
+                // Merge cloud data with local - cloud takes priority if newer
+                if (cloudData.jamboxRegistry && cloudData.jamboxRegistry.length > 0) {
+                    this.jamboxRegistry = cloudData.jamboxRegistry;
+                    StorageUtil.safeSet('datajam_jambox_registry', JSON.stringify(this.jamboxRegistry));
+                    console.log('[Inventory] Loaded', this.jamboxRegistry.length, 'JamBoxes from Supabase');
+                }
+
+                if (cloudData.cableStock !== undefined && cloudData.cableStock > 0) {
+                    this.inventory.cable = cloudData.cableStock;
+                    StorageUtil.safeSet('datajam_inventory', JSON.stringify(this.inventory));
+                    console.log('[Inventory] Loaded cable stock from Supabase:', cloudData.cableStock);
+                }
+
+                if (cloudData.shipments && cloudData.shipments.length > 0) {
+                    this.shipments = cloudData.shipments;
+                    StorageUtil.safeSet('datajam_shipments', JSON.stringify(this.shipments));
+                    console.log('[Inventory] Loaded', this.shipments.length, 'shipments from Supabase');
+                }
+
+                if (cloudData.history && cloudData.history.length > 0) {
+                    this.history = cloudData.history;
+                    StorageUtil.safeSet('datajam_inventory_history', JSON.stringify(this.history));
+                    console.log('[Inventory] Loaded', this.history.length, 'history entries from Supabase');
+                }
+
+                return true;
+            }
+        } catch (err) {
+            console.error('[Inventory] Failed to load from Supabase:', err);
+        }
+
+        return false;
     }
 
     init() {
+        // Initial render with localStorage data
         this.updateStats();
         this.setupTabSwitching();
         this.setupForms();
@@ -1629,6 +1734,18 @@ class InventoryManager {
         this.renderShipments();
         this.renderHistory();
         this.renderJamboxRegistry();
+
+        // Load from Supabase in background (will update UI when data arrives)
+        this.loadFromSupabase().then(loaded => {
+            if (loaded) {
+                // Re-render UI with cloud data
+                this.updateStats();
+                this.renderShipments();
+                this.renderHistory();
+                this.renderJamboxRegistry();
+                console.log('[Inventory] UI refreshed with Supabase data');
+            }
+        });
     }
 
     updateStats() {
@@ -1822,16 +1939,18 @@ class InventoryManager {
         this.saveInventory();
 
         // Add to history
-        this.history.unshift({
+        const historyEntry = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
             type: type,
             action: 'add',
             quantity: quantity,
             notes: notes,
-            user: 'Alex'
-        });
+            user: SessionManager.getCurrentUser() || 'Alex'
+        };
+        this.history.unshift(historyEntry);
         this.saveHistory();
+        this.syncHistoryEntryToSupabase(historyEntry);
 
         // Update UI
         this.updateStats();
@@ -1865,7 +1984,7 @@ class InventoryManager {
         this.saveInventory();
 
         // Add to history
-        this.history.unshift({
+        const historyEntry = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
             type: type,
@@ -1873,9 +1992,11 @@ class InventoryManager {
             quantity: quantity,
             reason: reason,
             notes: notes,
-            user: 'Alex'
-        });
+            user: SessionManager.getCurrentUser() || 'Alex'
+        };
+        this.history.unshift(historyEntry);
         this.saveHistory();
+        this.syncHistoryEntryToSupabase(historyEntry);
 
         // Update UI
         this.updateStats();
@@ -1950,7 +2071,7 @@ class InventoryManager {
 
         // Add to history
         if (jamboxQty > 0) {
-            this.history.unshift({
+            const jamboxHistoryEntry = {
                 id: Date.now(),
                 timestamp: new Date().toISOString(),
                 type: 'jambox',
@@ -1960,10 +2081,12 @@ class InventoryManager {
                 destination: destination,
                 notes: `Shipped JamBoxes: ${selectedJamboxIds.join(', ')}${notes ? ' - ' + notes : ''}`,
                 user: SessionManager.getCurrentUser() || 'Alex'
-            });
+            };
+            this.history.unshift(jamboxHistoryEntry);
+            this.syncHistoryEntryToSupabase(jamboxHistoryEntry);
         }
         if (cableQty > 0) {
-            this.history.unshift({
+            const cableHistoryEntry = {
                 id: Date.now() + 1,
                 timestamp: new Date().toISOString(),
                 type: 'cable',
@@ -1972,7 +2095,9 @@ class InventoryManager {
                 destination: destination,
                 notes: notes,
                 user: SessionManager.getCurrentUser() || 'Alex'
-            });
+            };
+            this.history.unshift(cableHistoryEntry);
+            this.syncHistoryEntryToSupabase(cableHistoryEntry);
         }
         this.saveHistory();
 
