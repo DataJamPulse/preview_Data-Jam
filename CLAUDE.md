@@ -3,7 +3,8 @@
 ## Project Overview
 Premium marketing website for Data Jam, an **AI-powered movement intelligence platform** transforming how OOH media is measured and valued. Operating in UK and US.
 
-**Live Site:** https://preview.data-jam.com (Netlify auto-deploys from GitHub)
+**Live Site:** https://data-jam.com (main marketing site)
+**Installer Portal:** https://preview.data-jam.com/installation (still on preview subdomain while being refined)
 **Repo:** https://github.com/DataJamPulse/preview_Data-Jam
 
 ## Company Info
@@ -279,6 +280,7 @@ SESSION_SECRET=xxxxxx (64-char hex for JWT signing - generate with: openssl rand
 ## Recent Updates (Dec 2024 - Dec 2025)
 
 ### Dec 2025
+- **Installer links use absolute URLs** - All "Installer" nav/footer links now point to `https://preview.data-jam.com/installation` (temporary while installer portal is refined on preview subdomain; will switch back to relative `/installation` once consolidated)
 - **SECURITY HARDENING ATTEMPTED & ROLLED BACK**
   - JWT/HTTP-only cookie implementation caused 502 errors in Netlify functions
   - Reverted to localStorage-based auth (working)
