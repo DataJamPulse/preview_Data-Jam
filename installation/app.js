@@ -901,8 +901,18 @@ class InstallationListManager {
     }
 
     init() {
+        // Initial render with localStorage data (for instant display)
         this.renderInstallations();
         this.setupEventListeners();
+
+        // Load from Supabase in background (will update UI when data arrives)
+        this.loadFromSupabase().then(loaded => {
+            if (loaded) {
+                // Re-render UI with cloud data
+                this.renderInstallations();
+                console.log('[Installations] UI refreshed with Supabase data');
+            }
+        });
     }
 
     switchView(view) {
@@ -1079,6 +1089,58 @@ class InstallationListManager {
     loadInstallations() {
         const stored = StorageUtil.safeGet('datajam_installations');
         return StorageUtil.safeParse(stored, []);
+    }
+
+    async loadFromSupabase() {
+        if (typeof db === 'undefined') {
+            console.log('[Installations] Supabase not available, using localStorage');
+            return false;
+        }
+
+        try {
+            // Wait for db to be initialized
+            if (!db.initialized) {
+                await db.init();
+            }
+
+            console.log('[Installations] Loading data from Supabase...');
+            const cloudInstallations = await db.getInstallations();
+
+            if (cloudInstallations && cloudInstallations.length > 0) {
+                // Normalize field names from Supabase (snake_case to camelCase)
+                this.installations = cloudInstallations.map(install => ({
+                    id: install.id,
+                    timestamp: install.created_at || install.timestamp,
+                    status: install.status || 'completed',
+                    projectName: install.project_name || install.projectName || '',
+                    clientName: install.venue_name || install.clientName || '',
+                    clientContact: install.contact_name || install.clientContact || '',
+                    clientEmail: install.contact_email || install.clientEmail || '',
+                    clientPhone: install.contact_phone || install.clientPhone || '',
+                    locationType: install.location_type || install.locationType || '',
+                    installAddress: install.address || install.installAddress || '',
+                    jamboxId: install.jambox_id || install.jamboxId || '',
+                    ssid: install.wifi_ssid || install.ssid || '',
+                    password: install.wifi_password || install.password || '',
+                    ipAddress: install.ip_address || install.ipAddress || '',
+                    installDate: install.install_date || install.installDate || '',
+                    installTime: install.install_time || install.installTime || '',
+                    notes: install.notes || '',
+                    deviceTested: install.device_tested ?? install.deviceTested ?? false,
+                    networkVerified: install.network_verified ?? install.networkVerified ?? false,
+                    photos: install.photos || []
+                }));
+
+                // Update localStorage cache
+                StorageUtil.safeSet('datajam_installations', JSON.stringify(this.installations));
+                console.log('[Installations] Loaded', this.installations.length, 'installations from Supabase');
+                return true;
+            }
+        } catch (err) {
+            console.error('[Installations] Failed to load from Supabase:', err);
+        }
+
+        return false;
     }
 
     renderInstallations() {

@@ -11,6 +11,15 @@
 
 ## Recent Updates
 
+**2025-12-22 - Installations Load from Supabase:**
+- ✅ **INSTALLATIONS NOW SYNC FROM SUPABASE**
+  - Dashboard, View Installs, and Projects pages now load installations from Supabase
+  - localStorage used as cache for instant display, then refreshed with cloud data
+  - Fixes issue where installations weren't visible after clearing cookies or using different browser
+  - Field name normalization handles both snake_case (Supabase) and camelCase (localStorage) formats
+  - Methods added: `loadFromSupabase()` in InstallationListManager, DashboardManager, ProjectManager
+  - Console logging for debugging: `[Installations] Loaded X installations from Supabase`
+
 **2025-12-17 - JamBox Registry, Help Guide & Supabase Sync:**
 - ✅ **JAMBOX REGISTRY SYSTEM**
   - Individual tracking for each JamBox device with serial numbers

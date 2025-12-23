@@ -138,6 +138,55 @@
                 this.setupFilterButtons();
                 this.renderProjects();
                 this.updateCounts();
+
+                // Load from Supabase in background (will update UI when data arrives)
+                this.loadFromSupabase().then(loaded => {
+                    if (loaded) {
+                        // Re-render UI with cloud data
+                        this.projects = this.buildProjectDirectory();
+                        this.renderProjects();
+                        this.updateCounts();
+                        console.log('[Projects] UI refreshed with Supabase data');
+                    }
+                });
+            }
+
+            async loadFromSupabase() {
+                if (typeof db === 'undefined') {
+                    console.log('[Projects] Supabase not available, using localStorage');
+                    return false;
+                }
+
+                try {
+                    // Wait for db to be initialized
+                    if (!db.initialized) {
+                        await db.init();
+                    }
+
+                    console.log('[Projects] Loading installations from Supabase...');
+                    const cloudInstallations = await db.getInstallations();
+
+                    if (cloudInstallations && cloudInstallations.length > 0) {
+                        // Normalize field names from Supabase (snake_case to camelCase)
+                        this.installations = cloudInstallations.map(install => ({
+                            id: install.id,
+                            timestamp: install.created_at || install.timestamp,
+                            status: install.status || 'completed',
+                            projectName: install.project_name || install.projectName || '',
+                            clientName: install.venue_name || install.clientName || '',
+                            jamboxId: install.jambox_id || install.jamboxId || ''
+                        }));
+
+                        // Update localStorage cache
+                        StorageUtil.safeSet('datajam_installations', JSON.stringify(this.installations));
+                        console.log('[Projects] Loaded', this.installations.length, 'installations from Supabase');
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('[Projects] Failed to load from Supabase:', err);
+                }
+
+                return false;
             }
 
             setupFilterButtons() {
