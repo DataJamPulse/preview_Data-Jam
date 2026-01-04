@@ -277,7 +277,13 @@ SESSION_SECRET=xxxxxx (64-char hex for JWT signing - generate with: openssl rand
 - Resend/HubSpot keys stored in Netlify environment variables (never client-side)
 - No debug logging in production functions
 
-## Recent Updates (Dec 2024 - Dec 2025)
+## Recent Updates (Dec 2024 - Jan 2026)
+
+### Jan 2026
+- **Installation card button fixes** - View Details, Print Report, Save as PDF, Edit, Delete buttons now work using event delegation (replaced inline onclick handlers that weren't firing)
+- **Project badge on cards** - Client/project name now displays prominently on each installation card with pink accent styling
+- **Project/client filter** - New dropdown on installations page to filter by project/client
+- **Hero text update** - Changed "audience exposure" to "audience counts" in hero subtitle
 
 ### Dec 2025
 - **Installer links use relative paths** - All "Installer" nav/footer links use `/installation` (works on data-jam.com main domain)

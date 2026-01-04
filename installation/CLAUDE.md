@@ -11,6 +11,24 @@
 
 ## Recent Updates
 
+**2026-01-04 - Installation Card UX Improvements:**
+- ✅ **BUTTON FIXES WITH EVENT DELEGATION**
+  - View Details, Print Report, Save as PDF, Edit, Delete buttons now work reliably
+  - Replaced inline onclick handlers with event delegation pattern
+  - Buttons use `data-action` and `data-id` attributes
+  - Single click handler on `#installGrid` routes to appropriate methods
+  - Fixes issue where buttons weren't responding to clicks
+- ✅ **PROJECT BADGE ON CARDS**
+  - Client/project name now displays prominently on each installation card
+  - Pink accent badge with border styling (`.install-project-badge` class)
+  - Shows below venue name for quick identification
+- ✅ **PROJECT/CLIENT FILTER**
+  - New dropdown filter on installations.html page
+  - Dynamically populated with all unique projects from installations
+  - Combined with existing search and status filters
+  - `populateProjectFilter()` method in InstallationListManager
+  - Filter applied in `renderInstallations()` method
+
 **2025-12-22 - Installations Load from Supabase:**
 - ✅ **INSTALLATIONS NOW SYNC FROM SUPABASE**
   - Dashboard, View Installs, and Projects pages now load installations from Supabase
@@ -792,11 +810,30 @@ start index.html
 
 ---
 
-**Last Updated:** 2025-12-16 (Calendar sync, flexible project matching, API response fix)
+**Last Updated:** 2026-01-04 (Button fixes with event delegation, project badge, project filter)
 **Document Owner:** Claude (AI Assistant)
 **Human Contact:** Alex (installer) & Rhea (management)
 
 ## Change Log
+
+**2026-01-04 - Installation Card UX Improvements:**
+- **BUTTON FIXES WITH EVENT DELEGATION:**
+  - All card action buttons (View Details, Print Report, Save as PDF, Edit, Delete) were not responding to clicks
+  - Root cause: inline onclick handlers weren't firing reliably
+  - Solution: Replaced inline onclick with event delegation pattern
+  - Added `data-action` and `data-id` attributes to buttons in `renderInstallCard()`
+  - Single event listener on `#installGrid` container routes clicks to appropriate methods
+  - Event delegation pattern: `e.target.closest('button[data-action]')` → switch on action
+- **PROJECT BADGE ON CARDS:**
+  - Added `.install-project-badge` CSS class to style.css
+  - Pink accent with border: `background: rgba(230, 47, 110, 0.15); color: var(--datajam-pink); border: 1px solid rgba(230, 47, 110, 0.3)`
+  - Project name displays below venue name in card header for quick visual identification
+- **PROJECT/CLIENT FILTER:**
+  - Added `<select id="projectFilter">` dropdown to installations.html
+  - Added `projectFilter` property to InstallationListManager class
+  - Added `populateProjectFilter()` method to dynamically populate options from installations
+  - Modified `renderInstallations()` to apply project filter alongside search and status filters
+  - Event listener on projectFilter calls `renderInstallations()` on change
 
 **2025-12-16 - Calendar Sync, Flexible Matching & API Fixes:**
 - **CALENDAR SYNC FEATURE:**
