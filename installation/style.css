@@ -639,6 +639,18 @@ footer {
     color: var(--datajam-white);
 }
 
+.install-project-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(230, 47, 110, 0.15);
+    color: var(--datajam-pink);
+    margin-top: 6px;
+    border: 1px solid rgba(230, 47, 110, 0.3);
+}
+
 .install-card-body {
     display: grid;
     gap: 12px;

@@ -895,6 +895,7 @@ class InstallationListManager {
         this.installations = this.loadInstallations();
         this.searchQuery = '';
         this.statusFilter = '';
+        this.projectFilter = ''; // Filter by project/client
         this.currentView = 'grid'; // 'grid' or 'calendar'
         this.calendarDate = new Date(); // Current month being viewed
         this.init();
@@ -1074,8 +1075,11 @@ class InstallationListManager {
             clearFilters.addEventListener('click', () => {
                 this.searchQuery = '';
                 this.statusFilter = '';
+                this.projectFilter = '';
                 if (searchInput) searchInput.value = '';
                 if (statusFilter) statusFilter.value = '';
+                const projectFilter = document.getElementById('projectFilter');
+                if (projectFilter) projectFilter.value = '';
                 this.renderInstallations();
             });
         }
@@ -1083,6 +1087,47 @@ class InstallationListManager {
         const clearAllBtn = document.getElementById('clearAllBtn');
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', () => this.clearAll());
+        }
+
+        // Project filter listener
+        const projectFilter = document.getElementById('projectFilter');
+        if (projectFilter) {
+            projectFilter.addEventListener('change', (e) => {
+                this.projectFilter = e.target.value;
+                this.renderInstallations();
+            });
+        }
+
+        // Event delegation for card action buttons
+        const installGrid = document.getElementById('installGrid');
+        if (installGrid) {
+            installGrid.addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                const id = parseInt(button.dataset.id, 10);
+
+                console.log('[InstallList] Button clicked:', action, 'ID:', id);
+
+                switch (action) {
+                    case 'view':
+                        this.viewDetails(id);
+                        break;
+                    case 'print':
+                        this.printReport(id);
+                        break;
+                    case 'pdf':
+                        this.savePDF(id);
+                        break;
+                    case 'edit':
+                        this.editInstallation(id);
+                        break;
+                    case 'delete':
+                        this.deleteInstallation(id);
+                        break;
+                }
+            });
         }
     }
 
@@ -1182,6 +1227,17 @@ class InstallationListManager {
             );
         }
 
+        // Apply project filter
+        if (this.projectFilter) {
+            filtered = filtered.filter(install =>
+                (install.projectName || '').toLowerCase() === this.projectFilter.toLowerCase() ||
+                (install.clientName || '').toLowerCase() === this.projectFilter.toLowerCase()
+            );
+        }
+
+        // Populate project filter dropdown with unique projects
+        this.populateProjectFilter();
+
         // Update result count
         const resultCount = document.getElementById('resultCount');
         if (resultCount) {
@@ -1204,6 +1260,33 @@ class InstallationListManager {
         grid.innerHTML = sorted.map(install => this.renderInstallCard(install)).join('');
     }
 
+    populateProjectFilter() {
+        const select = document.getElementById('projectFilter');
+        if (!select) return;
+
+        // Get unique projects and clients
+        const projectsSet = new Set();
+        this.installations.forEach(install => {
+            if (install.projectName) projectsSet.add(install.projectName);
+            if (install.clientName) projectsSet.add(install.clientName);
+        });
+
+        const projects = Array.from(projectsSet).sort();
+
+        // Remember current selection
+        const currentValue = select.value;
+
+        // Rebuild options
+        select.innerHTML = '<option value="">All Projects/Clients</option>';
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project;
+            option.textContent = project;
+            if (project === currentValue) option.selected = true;
+            select.appendChild(option);
+        });
+    }
+
     renderInstallCard(install) {
         const date = new Date(install.installDate);
         const formattedDate = date.toLocaleDateString('en-GB', {
@@ -1222,34 +1305,41 @@ class InstallationListManager {
                </div>`
             : '';
 
+        // Show project name prominently if available
+        const projectBadge = install.projectName
+            ? `<span class="install-project-badge">${install.projectName}</span>`
+            : '';
+
         return `
             <div class="install-card" data-id="${install.id}">
                 <div class="install-card-header">
-                    <h3>${install.clientName}</h3>
+                    <div>
+                        <h3>${install.clientName || 'Unknown Venue'}</h3>
+                        ${projectBadge}
+                    </div>
                     <span class="install-badge">${install.locationType || 'N/A'}</span>
                 </div>
                 <div class="install-card-body">
-                    ${install.projectName ? `<div class="install-info"><strong>Project:</strong> ${install.projectName}</div>` : ''}
                     <div class="install-info">
                         <strong>Date:</strong> ${formattedDate} ${install.installTime ? `at ${install.installTime}` : ''}
                     </div>
                     <div class="install-info">
-                        <strong>Location:</strong> ${install.installAddress}
+                        <strong>Location:</strong> ${install.installAddress || 'N/A'}
                     </div>
                     ${install.jamboxId ? `<div class="install-info"><strong>JamBox ID:</strong> ${install.jamboxId}</div>` : ''}
                     <div class="install-info">
-                        <strong>SSID:</strong> ${install.ssid}
+                        <strong>SSID:</strong> ${install.ssid || 'N/A'}
                     </div>
                     ${install.deviceTested ? '<div class="install-info" style="color: var(--datajam-pink);">✓ Device tested</div>' : ''}
                     ${install.networkVerified ? '<div class="install-info" style="color: var(--datajam-pink);">✓ Network verified</div>' : ''}
                     ${photoHTML}
                 </div>
                 <div class="install-card-actions">
-                    <button class="btn-small btn-view" onclick="listManager.viewDetails(${install.id})">View Details</button>
-                    <button class="btn-small btn-print" onclick="listManager.printReport(${install.id})">Print Report</button>
-                    <button class="btn-small btn-print" onclick="listManager.savePDF(${install.id})">Save as PDF</button>
-                    <button class="btn-small btn-edit" onclick="listManager.editInstallation(${install.id})">Edit</button>
-                    <button class="btn-small btn-delete" onclick="listManager.deleteInstallation(${install.id})">Delete</button>
+                    <button type="button" class="btn-small btn-view" data-action="view" data-id="${install.id}">View Details</button>
+                    <button type="button" class="btn-small btn-print" data-action="print" data-id="${install.id}">Print Report</button>
+                    <button type="button" class="btn-small btn-print" data-action="pdf" data-id="${install.id}">Save as PDF</button>
+                    <button type="button" class="btn-small btn-edit" data-action="edit" data-id="${install.id}">Edit</button>
+                    <button type="button" class="btn-small btn-delete" data-action="delete" data-id="${install.id}">Delete</button>
                 </div>
             </div>
         `;
